@@ -1,0 +1,13 @@
+{
+  "name": "riichi-mahjong-helper",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "npm run dev -w @riichi-mahjong/web",
+    "build": "npm run build -w @riichi-mahjong/web",
+    "preview": "npm run preview -w @riichi-mahjong/web"
+  },
+  "workspaces": [
+    "packages/*"
+  ]
+}
