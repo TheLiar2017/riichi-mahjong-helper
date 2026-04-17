@@ -1,0 +1,184 @@
+:root {
+  /* 主色 */
+  --color-bg: #1a2a3a;
+  --color-card: #2d4a5e;
+  --color-accent: #d4a84b;
+  --color-text: #f5f0e8;
+  --color-text-secondary: #a89f8f;
+  --color-danger: #c45c5c;
+
+  /* 麻将牌色 */
+  --tile-man: #2d5a4a;
+  --tile-pin: #4a2d5a;
+  --tile-sou: #5a4a2d;
+  --tile-honor: #3a4a5a;
+
+  /* 字体 */
+  --font-serif: 'Noto Serif SC', serif;
+  --font-sans: 'Noto Sans SC', sans-serif;
+
+  /* 间距 */
+  --space-xs: 0.25rem;
+  --space-sm: 0.5rem;
+  --space-md: 1rem;
+  --space-lg: 1.5rem;
+  --space-xl: 2rem;
+
+  /* 圆角 */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+
+  /* 阴影 */
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.5);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  font-family: var(--font-sans);
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  line-height: 1.6;
+}
+
+/* 背景纹理 */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image:
+    radial-gradient(ellipse at 50% 0%, rgba(45, 74, 94, 0.3) 0%, transparent 50%),
+    url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: -1;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-serif);
+  color: var(--color-accent);
+  font-weight: 700;
+}
+
+h1 { font-size: 2rem; }
+h2 { font-size: 1.5rem; }
+h3 { font-size: 1.25rem; }
+
+a {
+  color: var(--color-accent);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* 卡片样式 */
+.card {
+  background-color: var(--color-card);
+  border-radius: var(--radius-md);
+  padding: var(--space-lg);
+  box-shadow: var(--shadow-md);
+  border: 1px solid rgba(212, 168, 75, 0.1);
+}
+
+.card:hover {
+  border-color: rgba(212, 168, 75, 0.3);
+}
+
+/* 按钮样式 */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-sm) var(--space-lg);
+  border-radius: var(--radius-md);
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 2px solid transparent;
+}
+
+.btn-primary {
+  background-color: var(--color-accent);
+  color: var(--color-bg);
+}
+
+.btn-primary:hover {
+  background-color: #e5b95c;
+  transform: translateY(-1px);
+}
+
+.btn-secondary {
+  background-color: transparent;
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+
+.btn-secondary:hover {
+  background-color: rgba(212, 168, 75, 0.1);
+}
+
+/* 筛选标签 */
+.filter-tag {
+  display: inline-block;
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+  background-color: rgba(212, 168, 75, 0.15);
+  color: var(--color-accent);
+  border: 1px solid rgba(212, 168, 75, 0.3);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.filter-tag:hover,
+.filter-tag.active {
+  background-color: var(--color-accent);
+  color: var(--color-bg);
+}
+
+/* 滚动条 */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-bg);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-card);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(212, 168, 75, 0.3);
+}
+
+/* 响应式 */
+@media (max-width: 768px) {
+  .app-header {
+    padding: 1rem;
+  }
+
+  .app-main {
+    padding: 1rem;
+  }
+
+  .app-title {
+    font-size: 1.5rem;
+  }
+}
