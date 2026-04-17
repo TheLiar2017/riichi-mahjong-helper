@@ -405,7 +405,7 @@ export const YAKU_LIST: Yaku[] = [
       { tiles: ['1m','1m','1m','5p','5p','5p','9s','9s','9s','2m','3m','4m','EW','EW','EW'], explanation: '三个暗刻' }
     ],
     special_rules: '暗杠也算暗刻',
-    related_yaku: ['toitoi', 's Annotations: ['danari'],
+    related_yaku: ['toitoi', 'sananko'],
     common_pitfalls: '必须三个独立暗刻'
   },
   {
@@ -706,7 +706,7 @@ export const YAKU_LIST: Yaku[] = [
       { tiles: ['1m','1m','1m','2m','3m','4m','5m','5m','5m','6m','7m','8m','9m','EW','EW'], explanation: '岭上开花' }
     ],
     special_rules: '杠后摸岭上牌',
-    related_yaku: ['kan']);
+    related_yaku: ['kan'],
     common_pitfalls: '必须杠后'
   },
   {
