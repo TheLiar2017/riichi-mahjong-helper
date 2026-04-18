@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import { getTile } from '@core/data/tiles'
-import { calculateFu, type FuResult } from '@core/domain/fu'
+import { calculateFu } from '@core/domain/fu'
 import { calculateScore, formatScore, type ScoreResult } from '@core/domain/score'
+import { detectYaku, analyzeTenpai, type YakuMatch, type TenpaiResult } from '@core/domain/detector'
 import TileSelector from '../components/TileSelector.vue'
 import HandDisplay from '../components/HandDisplay.vue'
 
@@ -10,6 +11,25 @@ const selectedTiles = ref<string[]>([])
 const isTsumo = ref(false)
 const riichiBets = ref(0)
 const result = ref<ScoreResult | null>(null)
+
+// Settings for yaku detection
+const selfWind = ref<string>('ES') // East South West North
+const fieldWind = ref<string>('ES')
+const isParent = ref(false)
+
+// Computed for yaku detection (14 tiles)
+const detectedYaku = computed<YakuMatch[]>(() => {
+  if (selectedTiles.value.length !== 14) return []
+  const tiles = selectedTiles.value.map(id => getTile(id)).filter(Boolean) as any[]
+  return detectYaku(tiles, isTsumo.value, isParent.value, selfWind.value)
+})
+
+// Computed for tenpai analysis (13 tiles)
+const tenpaiAnalysis = computed<TenpaiResult[]>(() => {
+  if (selectedTiles.value.length !== 13) return []
+  const tiles = selectedTiles.value.map(id => getTile(id)).filter(Boolean) as any[]
+  return analyzeTenpai(tiles, selfWind.value)
+})
 
 const canCalculate = computed(() => selectedTiles.value.length === 14)
 
@@ -104,6 +124,31 @@ watch(selectedTiles, () => {
               <option :value="3">3 (3000点)</option>
             </select>
           </div>
+          <div class="option-item">
+            <span>自风:</span>
+            <select v-model="selfWind">
+              <option value="ES">东</option>
+              <option value="SS">南</option>
+              <option value="WS">西</option>
+              <option value="NS">北</option>
+            </select>
+          </div>
+          <div class="option-item">
+            <span>场风:</span>
+            <select v-model="fieldWind">
+              <option value="ES">东</option>
+              <option value="SS">南</option>
+              <option value="WS">西</option>
+              <option value="NS">北</option>
+            </select>
+          </div>
+          <div class="option-item">
+            <span>身份:</span>
+            <select v-model="isParent">
+              <option :value="false">子家</option>
+              <option :value="true">亲家</option>
+            </select>
+          </div>
         </div>
 
         <button
@@ -148,6 +193,37 @@ watch(selectedTiles, () => {
               <li v-for="(item, index) in result.breakdown" :key="index">{{ item }}</li>
             </ul>
           </div>
+        </div>
+
+        <div v-if="detectedYaku.length > 0" class="yaku-card card">
+          <h3>可和役种</h3>
+          <ul class="yaku-list">
+            <li v-for="(match, index) in detectedYaku" :key="index" class="yaku-item">
+              <div class="yaku-name">{{ match.yaku.name_zh }} ({{ match.yaku.han }}番)</div>
+              <div class="yaku-desc">{{ match.yaku.description }}</div>
+              <div v-if="match.score" class="yaku-score">
+                {{ formatScore(match.score.parentPoints) }} / {{ formatScore(match.score.childPoints) }}
+              </div>
+            </li>
+          </ul>
+        </div>
+
+        <div v-if="tenpaiAnalysis.length > 0" class="tenpai-card card">
+          <h3>进张分析</h3>
+          <ul class="tenpai-list">
+            <li v-for="(result, index) in tenpaiAnalysis" :key="index" class="tenpai-item">
+              <div class="tenpai-waiting">
+                听
+                <span class="tile-id">{{ result.waitingTile.id }}</span>
+                ({{ result.waitingTile.name }})
+              </div>
+              <ul class="tenpai-yaku">
+                <li v-for="(yaku, yIndex) in result.possibleYaku" :key="yIndex">
+                  {{ yaku.yaku.name_zh }} ({{ yaku.yaku.han }}番)
+                </li>
+              </ul>
+            </li>
+          </ul>
         </div>
 
         <div v-else-if="selectedTiles.length > 0 && selectedTiles.length < 14" class="waiting-card card">
@@ -312,6 +388,75 @@ watch(selectedTiles, () => {
 .waiting-card {
   text-align: center;
   padding: var(--space-lg);
+  color: var(--color-text-secondary);
+}
+
+.yaku-card,
+.tenpai-card {
+  padding: var(--space-md);
+}
+
+.yaku-card h3,
+.tenpai-card h3 {
+  font-size: 1rem;
+  margin-bottom: var(--space-sm);
+}
+
+.yaku-list,
+.tenpai-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.yaku-item {
+  padding: var(--space-sm) 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.yaku-item:last-child {
+  border-bottom: none;
+}
+
+.yaku-name {
+  font-weight: 600;
+  color: var(--color-accent);
+}
+
+.yaku-desc {
+  font-size: 0.85rem;
+  color: var(--color-text-secondary);
+  margin-top: 0.25rem;
+}
+
+.yaku-score {
+  font-size: 0.85rem;
+  color: var(--color-text-secondary);
+  margin-top: 0.25rem;
+}
+
+.tenpai-item {
+  padding: var(--space-sm) 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.tenpai-item:last-child {
+  border-bottom: none;
+}
+
+.tenpai-waiting {
+  font-weight: 600;
+}
+
+.tenpai-waiting .tile-id {
+  color: var(--color-accent);
+}
+
+.tenpai-yaku {
+  list-style: none;
+  padding-left: var(--space-md);
+  margin: 0.25rem 0 0 0;
+  font-size: 0.85rem;
   color: var(--color-text-secondary);
 }
 
