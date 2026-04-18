@@ -1,15 +1,23 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
-import { getTile } from '@core/data/tiles'
+import { getTile, AKA_DORA_IDS } from '@core/data/tiles'
 import { calculateFu } from '@core/domain/fu'
 import { calculateScore, formatScore, type ScoreResult } from '@core/domain/score'
 import { detectYaku, analyzeTenpai, type YakuMatch, type TenpaiResult } from '@core/domain/detector'
 import TileSelector from '../components/TileSelector.vue'
 import HandDisplay from '../components/HandDisplay.vue'
+import FuluSelector, { type FuluGroup } from '../components/FuluSelector.vue'
 
-const selectedTiles = ref<string[]>([])
+// 当前选牌区（临时存放正在选择的牌）
+const currentSelection = ref<string[]>([])
+// 已宣告的副露组
+const fuluGroups = ref<FuluGroup[]>([])
+// 手牌（不含副露）
+const handTiles = ref<string[]>([])
+
 const isTsumo = ref(false)
 const riichiBets = ref(0)
+const enableAkaDora = ref(false)
 const result = ref<ScoreResult | null>(null)
 
 // Settings for yaku detection
@@ -17,61 +25,110 @@ const selfWind = ref<string>('ES') // East South West North
 const fieldWind = ref<string>('ES')
 const isParent = ref(false)
 
-// Computed for yaku detection (14 tiles)
+// 赤宝牌数量
+const akaDoraCount = computed(() => {
+  if (!enableAkaDora.value) return 0
+  return totalTiles.value.filter(id => AKA_DORA_IDS.includes(id)).length
+})
+
+// 所有已选牌（用于 TileSelector 显示选中状态）
+const allSelectedTiles = computed(() => {
+  return [...fuluGroups.value.flatMap(g => g.tiles), ...handTiles.value, ...currentSelection.value]
+})
+
+// 计算用总牌数
+const totalTiles = computed(() => {
+  const fuluTiles = fuluGroups.value.flatMap(g => g.tiles)
+  return [...handTiles.value, ...fuluTiles]
+})
+
+// 检测番数和进张分析
 const detectedYaku = computed<YakuMatch[]>(() => {
-  if (selectedTiles.value.length !== 14) return []
-  const tiles = selectedTiles.value.map(id => getTile(id)).filter(Boolean) as any[]
+  if (totalTiles.value.length !== 14) return []
+  const tiles = totalTiles.value.map(id => getTile(id)).filter(Boolean) as any[]
   return detectYaku(tiles, isTsumo.value, isParent.value, selfWind.value, fieldWind.value)
 })
 
-// Computed for sorted yaku (by han descending)
 const sortedYaku = computed(() => {
   return [...detectedYaku.value].sort((a, b) => b.yaku.han - a.yaku.han)
 })
 
-// Computed for tenpai analysis (13 tiles)
 const tenpaiAnalysis = computed<TenpaiResult[]>(() => {
-  if (selectedTiles.value.length !== 13) return []
-  const tiles = selectedTiles.value.map(id => getTile(id)).filter(Boolean) as any[]
+  if (totalTiles.value.length !== 13) return []
+  const tiles = totalTiles.value.map(id => getTile(id)).filter(Boolean) as any[]
   return analyzeTenpai(tiles, selfWind.value, fieldWind.value)
 })
 
-const canCalculate = computed(() => selectedTiles.value.length === 14)
+const canCalculate = computed(() => totalTiles.value.length === 14)
 
+// TileSelector 交互
 const handleSelect = (tileId: string) => {
-  if (selectedTiles.value.length < 14) {
-    selectedTiles.value.push(tileId)
+  // 检查是否已在其他区域
+  const fuluTiles = fuluGroups.value.flatMap(g => g.tiles)
+  if (fuluTiles.includes(tileId) || handTiles.value.includes(tileId)) {
+    // 已在其他区域，忽略
+    return
   }
+  currentSelection.value.push(tileId)
 }
 
 const handleDeselect = (tileId: string) => {
-  const index = selectedTiles.value.indexOf(tileId)
+  const index = currentSelection.value.indexOf(tileId)
   if (index > -1) {
-    selectedTiles.value.splice(index, 1)
+    currentSelection.value.splice(index, 1)
   }
 }
 
-const handleRemove = (index: number) => {
-  selectedTiles.value.splice(index, 1)
+const handleRemoveFromHand = (index: number) => {
+  handTiles.value.splice(index, 1)
 }
 
-const handleClear = () => {
-  selectedTiles.value = []
+const handleClearHand = () => {
+  handTiles.value = []
   result.value = null
 }
 
+// 副露操作
+const confirmFulu = (type: 'pon' | 'chi' | 'kan') => {
+  if (currentSelection.value.length > 0) {
+    fuluGroups.value.push({
+      type,
+      tiles: [...currentSelection.value]
+    })
+    currentSelection.value = []
+    result.value = null
+  }
+}
+
+const removeFuluGroup = (index: number) => {
+  fuluGroups.value.splice(index, 1)
+  result.value = null
+}
+
+const clearSelection = () => {
+  currentSelection.value = []
+}
+
+const addSelectionToHand = () => {
+  // 将当前选牌移入手牌
+  handTiles.value.push(...currentSelection.value)
+  currentSelection.value = []
+  result.value = null
+}
+
+// 计算
 const calculate = () => {
   if (!canCalculate.value) return
 
-  const tiles = selectedTiles.value.map(id => getTile(id)).filter(Boolean) as any[]
+  const tiles = totalTiles.value.map(id => getTile(id)).filter(Boolean) as any[]
   const fuResult = calculateFu(tiles, isTsumo.value)
-  const han = detectedYaku.value.reduce((sum, match) => sum + match.yaku.han, 0)
+  const han = detectedYaku.value.reduce((sum, match) => sum + match.yaku.han, 0) + akaDoraCount.value
 
   result.value = calculateScore(fuResult, han, false, riichiBets.value)
 }
 
-watch(selectedTiles, () => {
-  if (result.value && selectedTiles.value.length !== 14) {
+watch(totalTiles, () => {
+  if (result.value && totalTiles.value.length !== 14) {
     result.value = null
   }
 }, { deep: true })
@@ -84,20 +141,39 @@ watch(selectedTiles, () => {
     <div class="calculator-layout">
       <div class="selector-section">
         <TileSelector
-          :selected-tiles="selectedTiles"
+          :selected-tiles="allSelectedTiles"
           @select="handleSelect"
           @deselect="handleDeselect"
         />
       </div>
 
       <div class="result-section">
-        <div class="hand-section card">
-          <h3>当前手牌</h3>
-          <HandDisplay
-            :tiles="selectedTiles"
-            @remove="handleRemove"
-            @clear="handleClear"
+        <!-- 副露选择区 -->
+        <div class="card">
+          <h3>副露</h3>
+          <FuluSelector
+            :fulu-groups="fuluGroups"
+            :current-selection="currentSelection"
+            @confirm-fulu="confirmFulu"
+            @remove-group="removeFuluGroup"
+            @add-to-hand="addSelectionToHand"
+            @clear-selection="clearSelection"
           />
+        </div>
+
+        <!-- 手牌区 -->
+        <div class="hand-section card">
+          <h3>手牌</h3>
+          <HandDisplay
+            :tiles="handTiles"
+            @remove="handleRemoveFromHand"
+            @clear="handleClearHand"
+          />
+          <div v-if="currentSelection.length > 0" class="add-to-hand-hint">
+            <button class="btn btn-secondary btn-sm" @click="addSelectionToHand">
+              + 加入手牌 ({{ currentSelection.length }}张)
+            </button>
+          </div>
         </div>
 
         <div class="options-section card">
@@ -105,6 +181,10 @@ watch(selectedTiles, () => {
           <label class="option-item">
             <input type="checkbox" v-model="isTsumo" />
             <span>自摸</span>
+          </label>
+          <label class="option-item">
+            <input type="checkbox" v-model="enableAkaDora" />
+            <span>赤宝牌</span>
           </label>
           <div class="option-item">
             <span>立直棒:</span>
@@ -221,8 +301,8 @@ watch(selectedTiles, () => {
           </ul>
         </div>
 
-        <div v-else-if="selectedTiles.length > 0 && selectedTiles.length < 14" class="waiting-card card">
-          <p>还需选择 {{ 14 - selectedTiles.length }} 张牌</p>
+        <div v-else-if="totalTiles.length > 0 && totalTiles.length < 14" class="waiting-card card">
+          <p>还需选择 {{ 14 - totalTiles.length }} 张牌</p>
         </div>
       </div>
     </div>
@@ -413,6 +493,16 @@ watch(selectedTiles, () => {
   text-align: center;
   padding: var(--space-lg);
   color: var(--color-text-secondary);
+}
+
+.add-to-hand-hint {
+  margin-top: var(--space-sm);
+  text-align: center;
+}
+
+.btn-sm {
+  padding: 0.25rem 0.75rem;
+  font-size: 0.85rem;
 }
 
 .yaku-card,

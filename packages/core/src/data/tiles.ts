@@ -15,6 +15,7 @@ export const TILES: Tile[] = [
   { id: '3m', type: 'man', value: 3, name_ja: '三万', name_zh: '三万' },
   { id: '4m', type: 'man', value: 4, name_ja: '四万', name_zh: '四万' },
   { id: '5m', type: 'man', value: 5, name_ja: '五万', name_zh: '五万' },
+  { id: '5mr', type: 'man', value: 5, name_ja: '赤五万', name_zh: '赤五万' },
   { id: '6m', type: 'man', value: 6, name_ja: '六万', name_zh: '六万' },
   { id: '7m', type: 'man', value: 7, name_ja: '七万', name_zh: '七万' },
   { id: '8m', type: 'man', value: 8, name_ja: '八万', name_zh: '八万' },
@@ -25,6 +26,7 @@ export const TILES: Tile[] = [
   { id: '3p', type: 'pin', value: 3, name_ja: '三筒', name_zh: '三筒' },
   { id: '4p', type: 'pin', value: 4, name_ja: '四筒', name_zh: '四筒' },
   { id: '5p', type: 'pin', value: 5, name_ja: '五筒', name_zh: '五筒' },
+  { id: '5pr', type: 'pin', value: 5, name_ja: '赤五筒', name_zh: '赤五筒' },
   { id: '6p', type: 'pin', value: 6, name_ja: '六筒', name_zh: '六筒' },
   { id: '7p', type: 'pin', value: 7, name_ja: '七筒', name_zh: '七筒' },
   { id: '8p', type: 'pin', value: 8, name_ja: '八筒', name_zh: '八筒' },
@@ -35,6 +37,7 @@ export const TILES: Tile[] = [
   { id: '3s', type: 'sou', value: 3, name_ja: '三索', name_zh: '三索' },
   { id: '4s', type: 'sou', value: 4, name_ja: '四索', name_zh: '四索' },
   { id: '5s', type: 'sou', value: 5, name_ja: '五索', name_zh: '五索' },
+  { id: '5sr', type: 'sou', value: 5, name_ja: '赤五索', name_zh: '赤五索' },
   { id: '6s', type: 'sou', value: 6, name_ja: '六索', name_zh: '六索' },
   { id: '7s', type: 'sou', value: 7, name_ja: '七索', name_zh: '七索' },
   { id: '8s', type: 'sou', value: 8, name_ja: '八索', name_zh: '八索' },
@@ -48,6 +51,9 @@ export const TILES: Tile[] = [
   { id: 'FW', type: 'honor', value: 'FW', name_ja: '发', name_zh: '发财' },
   { id: 'CW', type: 'honor', value: 'CW', name_ja: '中', name_zh: '中' },
 ];
+
+// 赤宝牌 ID 列表
+export const AKA_DORA_IDS = ['5mr', '5pr', '5sr'];
 
 export const TILE_BY_ID = new Map(TILES.map(t => [t.id, t]));
 

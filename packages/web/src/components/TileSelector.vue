@@ -33,9 +33,12 @@ const getSelectedCount = (tileId: string) => {
 }
 
 const handleTileClick = (tileId: string) => {
-  if (isSelected(tileId)) {
+  const count = getSelectedCount(tileId)
+  if (count > 0) {
+    // 已有选择的牌，点击移除一张
     emit('deselect', tileId)
   } else {
+    // 未选择的牌，添加
     emit('select', tileId)
   }
 }
