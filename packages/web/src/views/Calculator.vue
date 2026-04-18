@@ -24,6 +24,11 @@ const detectedYaku = computed<YakuMatch[]>(() => {
   return detectYaku(tiles, isTsumo.value, isParent.value, selfWind.value)
 })
 
+// Computed for sorted yaku (by han descending)
+const sortedYaku = computed(() => {
+  return [...detectedYaku.value].sort((a, b) => b.yaku.han - a.yaku.han)
+})
+
 // Computed for tenpai analysis (13 tiles)
 const tenpaiAnalysis = computed<TenpaiResult[]>(() => {
   if (selectedTiles.value.length !== 13) return []
@@ -182,11 +187,14 @@ watch(selectedTiles, () => {
           </div>
         </div>
 
-        <div v-if="detectedYaku.length > 0" class="yaku-card card">
+        <div v-if="sortedYaku.length > 0" class="yaku-card card">
           <h3>可和役种</h3>
           <ul class="yaku-list">
-            <li v-for="(match, index) in detectedYaku" :key="index" class="yaku-item">
-              <div class="yaku-name">{{ match.yaku.name_zh }} ({{ match.yaku.han }}番)</div>
+            <li v-for="(match, index) in sortedYaku" :key="index" class="yaku-item">
+              <div class="yaku-header">
+                <span class="yaku-name">{{ match.yaku.name_zh }}</span>
+                <span class="yaku-han">{{ match.yaku.han }}番</span>
+              </div>
               <div class="yaku-desc">{{ match.yaku.description }}</div>
               <div v-if="match.score" class="yaku-score">
                 {{ formatScore(match.score.parentPoints) }} / {{ formatScore(match.score.childPoints) }}
@@ -412,9 +420,20 @@ watch(selectedTiles, () => {
   border-bottom: none;
 }
 
+.yaku-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
 .yaku-name {
   font-weight: 600;
+}
+
+.yaku-han {
+  font-size: 0.85rem;
   color: var(--color-accent);
+  font-weight: 600;
 }
 
 .yaku-desc {
