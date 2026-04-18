@@ -3,7 +3,7 @@ import { computed } from 'vue'
 import Tile from './Tile.vue'
 import { TILES } from '@core/data/tiles'
 
-defineProps<{
+const props = defineProps<{
   tiles: string[]
   maxTiles?: number
 }>()
@@ -27,6 +27,10 @@ const groupNames: Record<string, string> = {
   sou: '索子',
   honor: '字牌'
 }
+
+const progress = computed(() => {
+  return (props.tiles.length / (props.maxTiles || 14)) * 100
+})
 </script>
 
 <template>
@@ -36,6 +40,10 @@ const groupNames: Record<string, string> = {
       <button v-if="tiles.length > 0" class="btn btn-secondary btn-sm" @click="emit('clear')">
         清空
       </button>
+    </div>
+
+    <div class="progress-bar">
+      <div class="progress-fill" :style="{ width: progress + '%' }"></div>
     </div>
 
     <div class="hand-tiles">
@@ -143,5 +151,20 @@ const groupNames: Record<string, string> = {
   justify-content: center;
   opacity: 0;
   transition: opacity 0.2s ease;
+}
+
+.progress-bar {
+  height: 4px;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+  margin-top: var(--space-xs);
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background-color: var(--color-accent);
+  border-radius: 2px;
+  transition: width 0.2s ease;
 }
 </style>
