@@ -21,7 +21,7 @@ const isParent = ref(false)
 const detectedYaku = computed<YakuMatch[]>(() => {
   if (selectedTiles.value.length !== 14) return []
   const tiles = selectedTiles.value.map(id => getTile(id)).filter(Boolean) as any[]
-  return detectYaku(tiles, isTsumo.value, isParent.value, selfWind.value)
+  return detectYaku(tiles, isTsumo.value, isParent.value, selfWind.value, fieldWind.value)
 })
 
 // Computed for sorted yaku (by han descending)
@@ -33,7 +33,7 @@ const sortedYaku = computed(() => {
 const tenpaiAnalysis = computed<TenpaiResult[]>(() => {
   if (selectedTiles.value.length !== 13) return []
   const tiles = selectedTiles.value.map(id => getTile(id)).filter(Boolean) as any[]
-  return analyzeTenpai(tiles, selfWind.value)
+  return analyzeTenpai(tiles, selfWind.value, fieldWind.value)
 })
 
 const canCalculate = computed(() => selectedTiles.value.length === 14)
