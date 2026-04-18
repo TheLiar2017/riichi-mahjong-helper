@@ -1,0 +1,149 @@
+import type { Tile, TileType } from '../data/tiles';
+import { TILES, getTile } from '../data/tiles';
+import type { Yaku } from '../data/yaku';
+import { YAKU_LIST } from '../data/yaku';
+import type { ScoreResult } from './score';
+import { calculateScore } from './score';
+import { calculateFu, type FuResult } from './fu';
+import { splitHand, type HandSplit, type Meld, type HandFeatures, extractFeatures } from './patterns';
+
+export interface YakuMatch {
+  yaku: Yaku;
+  breakdown: string[];
+  score?: ScoreResult;
+}
+
+export interface TenpaiResult {
+  waitingTile: Tile;
+  possibleYaku: YakuMatch[];
+}
+
+// 检测单一役种是否满足
+function matchYaku(yaku: Yaku, tiles: Tile[], split: HandSplit, features: HandFeatures, isTsumo: boolean, isParent: boolean, wind?: string): boolean {
+  switch (yaku.id) {
+    case 'tanyao':
+      return !features.hasYao;
+    case 'pinfu':
+      return features.allSequences && !features.pairYakuhai;
+    case 'menzen_tsumo':
+      return isTsumo && features.isMenzen;
+    case 'ittsu':
+      return matchIttsu(split.melds);
+    case 'sanshoku_dojun':
+      return matchSanshokuDojun(split.melds);
+    case 'honitsu':
+      return features.singleSuit !== null && features.singleSuit !== 'honor' && features.hasYao;
+    case 'chinitsu':
+      return features.singleSuit !== null && features.singleSuit !== 'honor' && !features.hasYao;
+    default:
+      return false;
+  }
+}
+
+function matchIttsu(melds: Meld[]): boolean {
+  // 统计123/456/789顺子数量
+  const chiMelds = melds.filter(m => m.type === 'chi');
+  const count123 = chiMelds.filter(m => m.tiles[0].value === 1).length;
+  const count456 = chiMelds.filter(m => m.tiles[0].value === 4).length;
+  const count789 = chiMelds.filter(m => m.tiles[0].value === 7).length;
+  return (count123 > 0 && count456 > 0 && count789 > 0);
+}
+
+function matchSanshokuDojun(melds: Meld[]): boolean {
+  const chiMelds = melds.filter(m => m.type === 'chi');
+  if (chiMelds.length < 1) return false;
+
+  // 按顺序值分组
+  const byValue = new Map<number, { type: TileType; count: number }[]>();
+  for (const m of chiMelds) {
+    const val = m.tiles[0].value as number;
+    if (!byValue.has(val)) byValue.set(val, []);
+    byValue.get(val)!.push({ type: m.tiles[0].type, count: 1 });
+  }
+
+  // 找123/456/789各有一组且类型不同
+  for (const val of [1, 4, 7]) {
+    if (!byValue.has(val)) return false;
+    const types = byValue.get(val)!.map(x => x.type);
+    if (types.length !== 1) return false;
+  }
+
+  const types123 = byValue.get(1)!.map(x => x.type);
+  const types456 = byValue.get(4)!.map(x => x.type);
+  const types789 = byValue.get(7)!.map(x => x.type);
+
+  return types123[0] !== types456[0] && types456[0] !== types789[0] && types123[0] !== types789[0];
+}
+
+// 从split构建完整手牌
+function buildFullHand(split: HandSplit): Tile[] {
+  const tiles: Tile[] = [];
+  // 添加雀头
+  if (split.pair) {
+    tiles.push(split.pair, split.pair);
+  }
+  // 添加所有面子
+  for (const meld of split.melds) {
+    tiles.push(...meld.tiles);
+  }
+  return tiles;
+}
+
+// 完整和牌检测
+export function detectYaku(tiles: Tile[], isTsumo: boolean, isParent: boolean, wind?: string): YakuMatch[] {
+  const results: YakuMatch[] = [];
+  const splits = splitHand(tiles);
+
+  for (const split of splits) {
+    const features = extractFeatures(tiles, split.melds, split.pair, isTsumo);
+    const fullHand = buildFullHand(split);
+
+    // 使用实际的calculateFu获取真实符数
+    const fuResult = calculateFu(fullHand, isTsumo, wind);
+
+    for (const yaku of YAKU_LIST) {
+      if (matchYaku(yaku, tiles, split, features, isTsumo, isParent, wind)) {
+        const score = calculateScore(fuResult, yaku.han, isParent);
+
+        results.push({
+          yaku,
+          breakdown: [`${yaku.name_zh}: ${yaku.description}`],
+          score
+        });
+      }
+    }
+  }
+
+  return results;
+}
+
+// 听牌分析
+export function analyzeTenpai(tiles: Tile[], wind?: string): TenpaiResult[] {
+  if (tiles.length !== 13) return [];
+
+  const results: TenpaiResult[] = [];
+  const usedIds = new Set(tiles.map(t => t.id));
+
+  // 枚举可进张
+  for (const tile of TILES) {
+    if (usedIds.has(tile.id)) continue;
+    const count = tiles.filter(t => t.id === tile.id).length;
+    if (count >= 4) continue;
+
+    const fullHand = [...tiles, tile];
+    const matches = detectYaku(fullHand, true, false, wind);
+
+    if (matches.length > 0) {
+      results.push({ waitingTile: tile, possibleYaku: matches });
+    }
+  }
+
+  // 按收益排序
+  results.sort((a, b) => {
+    const aMax = Math.max(...a.possibleYaku.map(m => m.yaku.han));
+    const bMax = Math.max(...b.possibleYaku.map(m => m.yaku.han));
+    return bMax - aMax;
+  });
+
+  return results;
+}
