@@ -127,7 +127,7 @@ export interface HandFeatures {
 }
 
 // 役牌ID列表 - 三元牌（白板、绿发、红中）
-const YAKUHAI_DRAGON_IDS = ['FW', 'CW', 'RD'];
+const YAKUHAI_DRAGON_IDS = ['EW', 'FW', 'CW'];
 
 export function extractFeatures(tiles: Tile[], melds: Meld[], pair: Tile, _isTsumo: boolean, selfWind?: string, fieldWind?: string): HandFeatures {
   const allTiles = [...tiles];
