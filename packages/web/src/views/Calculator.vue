@@ -6,19 +6,32 @@ import { calculateScore, formatScore, type ScoreResult } from '@core/domain/scor
 import { detectYaku, analyzeTenpai, type YakuMatch, type TenpaiResult } from '@core/domain/detector'
 import TileSelector from '../components/TileSelector.vue'
 import HandDisplay from '../components/HandDisplay.vue'
+import Tile from '../components/Tile.vue'
 import FuluSelector, { type FuluGroup } from '../components/FuluSelector.vue'
 
 // 当前选牌区（临时存放正在选择的牌）
 const currentSelection = ref<string[]>([])
 // 已宣告的副露组
 const fuluGroups = ref<FuluGroup[]>([])
+// 暗杠组
+const ankanGroups = ref<{ tiles: string[] }[]>([])
 // 手牌（不含副露）
 const handTiles = ref<string[]>([])
 
 const isTsumo = ref(false)
-const riichiBets = ref(0)
-const enableAkaDora = ref(false)
+const isRiichi = ref(false)
+const enableAkaDora = ref(true)
 const result = ref<ScoreResult | null>(null)
+
+// 特殊役选项
+const haitei = ref(false) // 海底捞月
+const houtei = ref(false) // 河底摸鱼
+const rinkou = ref(false) // 岭上开花
+
+// 是否门前清（无副露无暗杠）
+const isMenzen = computed(() => {
+  return fuluGroups.value.length === 0 && ankanGroups.value.length === 0
+})
 
 // Settings for yaku detection
 const selfWind = ref<string>('ES') // East South West North
@@ -33,13 +46,14 @@ const akaDoraCount = computed(() => {
 
 // 所有已选牌（用于 TileSelector 显示选中状态）
 const allSelectedTiles = computed(() => {
-  return [...fuluGroups.value.flatMap(g => g.tiles), ...handTiles.value, ...currentSelection.value]
+  return [...fuluGroups.value.flatMap(g => g.tiles), ...handTiles.value, ...currentSelection.value, ...ankanGroups.value.flatMap(g => g.tiles)]
 })
 
 // 计算用总牌数
 const totalTiles = computed(() => {
   const fuluTiles = fuluGroups.value.flatMap(g => g.tiles)
-  return [...handTiles.value, ...fuluTiles]
+  const ankanTiles = ankanGroups.value.flatMap(g => g.tiles)
+  return [...handTiles.value, ...fuluTiles, ...ankanTiles]
 })
 
 // 检测番数和进张分析
@@ -61,14 +75,57 @@ const tenpaiAnalysis = computed<TenpaiResult[]>(() => {
 
 const canCalculate = computed(() => totalTiles.value.length === 14)
 
+// 普通牌ID到红宝牌ID的映射
+const normalToAka: Record<string, string> = {
+  '5m': 'r5m',
+  '5p': 'r5p',
+  '5s': 'r5s'
+}
+
+const akaToNormal: Record<string, string> = {
+  'r5m': '5m',
+  'r5p': '5p',
+  'r5s': '5s'
+}
+
 // TileSelector 交互
 const handleSelect = (tileId: string) => {
-  // 检查是否已在其他区域
   const fuluTiles = fuluGroups.value.flatMap(g => g.tiles)
-  if (fuluTiles.includes(tileId) || handTiles.value.includes(tileId)) {
-    // 已在其他区域，忽略
-    return
+  const ankanTiles = ankanGroups.value.flatMap(g => g.tiles)
+  const allTiles = [...handTiles.value, ...fuluTiles, ...ankanTiles, ...currentSelection.value]
+
+  // 检查是否是红宝牌
+  const isAka = tileId in akaToNormal
+  const pairedId = isAka ? akaToNormal[tileId] : normalToAka[tileId]
+
+  if (isAka) {
+    // 红宝牌：只能选择1张
+    const akaCount = allTiles.filter(t => t === tileId).length
+    if (akaCount >= 1) {
+      return
+    }
+  } else if (pairedId) {
+    // 普通5万/5筒/5索
+    const normalCount = allTiles.filter(t => t === tileId).length
+    if (enableAkaDora.value) {
+      // 启用赤宝牌时：普通牌最多3张（红宝牌占1张）
+      if (normalCount >= 3) {
+        return
+      }
+    } else {
+      // 未启用赤宝牌：最多4张
+      if (normalCount >= 4) {
+        return
+      }
+    }
+  } else {
+    // 普通牌（非5系）：最多4张
+    const count = allTiles.filter(t => t === tileId).length
+    if (count >= 4) {
+      return
+    }
   }
+
   currentSelection.value.push(tileId)
 }
 
@@ -81,6 +138,48 @@ const handleDeselect = (tileId: string) => {
 
 const handleRemoveFromHand = (index: number) => {
   handTiles.value.splice(index, 1)
+}
+
+const handleAnkan = (tileId: string) => {
+  // 从手牌中移除4张相同的牌作为暗杠（包括红宝牌）
+  const akaId = normalToAka[tileId]
+  // 找出所有匹配的牌（普通牌和红宝牌都算）
+  const matchedIndices: number[] = []
+  for (let i = 0; i < handTiles.value.length; i++) {
+    if (handTiles.value[i] === tileId || (akaId && handTiles.value[i] === akaId)) {
+      matchedIndices.push(i)
+    }
+  }
+
+  if (matchedIndices.length >= 4) {
+    // 从后往前移除，避免索引偏移
+    const tilesToStore: string[] = []
+    matchedIndices.slice(0, 4).reverse().forEach(i => {
+      tilesToStore.push(handTiles.value[i])
+      handTiles.value.splice(i, 1)
+    })
+    const finalTiles = tilesToStore.reverse()
+    // 确保红宝牌在中间位置（tiles[1]）显示
+    if (akaId) {
+      const akaIndex = finalTiles.indexOf(akaId)
+      if (akaIndex > -1 && akaIndex !== 1) {
+        // 把红宝牌换到位置 1
+        const temp = finalTiles[1]
+        finalTiles[1] = finalTiles[akaIndex]
+        finalTiles[akaIndex] = temp
+      }
+    }
+    ankanGroups.value.push({ tiles: finalTiles })
+    result.value = null
+  }
+}
+
+const removeAnkanGroup = (index: number) => {
+  // 将暗杠的牌返回到手牌
+  const group = ankanGroups.value[index]
+  handTiles.value.push(...group.tiles)
+  ankanGroups.value.splice(index, 1)
+  result.value = null
 }
 
 const handleClearHand = () => {
@@ -129,9 +228,14 @@ const calculate = () => {
 
   const tiles = totalTiles.value.map(id => getTile(id)).filter(Boolean) as any[]
   const fuResult = calculateFu(tiles, isTsumo.value)
-  const han = detectedYaku.value.reduce((sum, match) => sum + match.yaku.han, 0) + akaDoraCount.value
+  let han = detectedYaku.value.reduce((sum, match) => sum + match.yaku.han, 0) + akaDoraCount.value
 
-  result.value = calculateScore(fuResult, han, false, riichiBets.value)
+  // 特殊役
+  if (haitei.value) han += 1
+  if (houtei.value) han += 1
+  if (rinkou.value) han += 1
+
+  result.value = calculateScore(fuResult, han, false, isRiichi.value ? 1 : 0)
 }
 
 watch(totalTiles, () => {
@@ -145,10 +249,44 @@ watch(totalTiles, () => {
   <div class="calculator-page">
     <h1>符数计算器</h1>
 
+    <!-- 手牌汇总横向展示 - 放在最上方单独一行 -->
+    <div v-if="totalTiles.length > 0" class="hand-summary card">
+      <div class="hand-summary-row">
+        <!-- 手牌 -->
+        <div v-if="handTiles.length > 0" class="tile-group hand-group">
+          <Tile v-for="(tileId, index) in handTiles" :key="'hand-' + index" :tile-id="tileId" size="sm" />
+        </div>
+
+        <!-- 暗杠 -->
+        <template v-if="ankanGroups.length > 0">
+          <div class="group-separator"></div>
+          <div class="tile-group ankan-group">
+            <div v-for="(group, gIndex) in ankanGroups" :key="'ankan-' + gIndex" class="sub-group">
+              <img src="/tiles/back.png" class="tile-img tile-back" />
+              <Tile :tile-id="group.tiles[1]" size="sm" />
+              <Tile :tile-id="group.tiles[2]" size="sm" />
+              <img src="/tiles/back.png" class="tile-img tile-back" />
+            </div>
+          </div>
+        </template>
+
+        <!-- 副露 -->
+        <template v-if="fuluGroups.length > 0">
+          <div class="group-separator"></div>
+          <div class="tile-group fulu-group">
+            <div v-for="(group, gIndex) in fuluGroups" :key="'fulu-' + gIndex" class="sub-group">
+              <Tile v-for="(tileId, tIndex) in group.tiles" :key="'fulu-' + gIndex + '-' + tIndex" :tile-id="tileId" size="sm" />
+            </div>
+          </div>
+        </template>
+      </div>
+    </div>
+
     <div class="calculator-layout">
       <div class="selector-section">
         <TileSelector
           :selected-tiles="allSelectedTiles"
+          :show-aka-dora="enableAkaDora"
           @select="handleSelect"
           @deselect="handleDeselect"
         />
@@ -176,11 +314,39 @@ watch(totalTiles, () => {
             :tiles="handTiles"
             @remove="handleRemoveFromHand"
             @clear="handleClearHand"
+            @ankan="handleAnkan"
           />
           <div v-if="currentSelection.length > 0" class="add-to-hand-hint">
             <button class="btn btn-secondary btn-sm" @click="addSelectionToHand">
               + 加入手牌 ({{ currentSelection.length }}张)
             </button>
+          </div>
+        </div>
+
+        <!-- 暗杠展示区 -->
+        <div v-if="ankanGroups.length > 0" class="ankan-display card">
+          <h3>暗杠</h3>
+          <div class="ankan-groups">
+            <div v-for="(group, index) in ankanGroups" :key="index" class="ankan-group">
+              <div class="ankan-group-header">
+                <span>暗杠</span>
+                <button class="btn-remove-ankan" @click="removeAnkanGroup(index)">×</button>
+              </div>
+              <div class="ankan-tiles">
+                <div class="ankan-tile-wrapper">
+                  <img src="/tiles/back.png" class="tile-img tile-back" />
+                </div>
+                <div class="ankan-tile-wrapper">
+                  <Tile :tile-id="group.tiles[1]" size="sm" />
+                </div>
+                <div class="ankan-tile-wrapper">
+                  <Tile :tile-id="group.tiles[2]" size="sm" />
+                </div>
+                <div class="ankan-tile-wrapper">
+                  <img src="/tiles/back.png" class="tile-img tile-back" />
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -194,15 +360,25 @@ watch(totalTiles, () => {
             <input type="checkbox" v-model="enableAkaDora" />
             <span>赤宝牌</span>
           </label>
-          <div class="option-item">
-            <span>立直棒:</span>
-            <select v-model.number="riichiBets">
-              <option :value="0">0</option>
-              <option :value="1">1 (1000点)</option>
-              <option :value="2">2 (2000点)</option>
-              <option :value="3">3 (3000点)</option>
-            </select>
-          </div>
+          <label class="option-item" :class="{ 'option-disabled': !isMenzen }">
+            <input type="checkbox" v-model="isRiichi" :disabled="!isMenzen" />
+            <span>立直</span>
+            <span v-if="!isMenzen" class="option-hint">(需门前清)</span>
+          </label>
+          <div class="option-divider"></div>
+          <label class="option-item">
+            <input type="checkbox" v-model="haitei" />
+            <span>海底捞月</span>
+          </label>
+          <label class="option-item">
+            <input type="checkbox" v-model="houtei" />
+            <span>河底摸鱼</span>
+          </label>
+          <label class="option-item">
+            <input type="checkbox" v-model="rinkou" />
+            <span>岭上开花</span>
+          </label>
+          <div class="option-divider"></div>
           <div class="option-item">
             <span>自风:</span>
             <select v-model="selfWind">
@@ -264,7 +440,7 @@ watch(totalTiles, () => {
           </div>
 
           <div v-if="result.riichiBet > 0" class="result-riichi">
-            含 {{ result.riichiBet }} 根立直棒 (+{{ result.riichiBet * 1000 }})
+            立直 (+{{ result.riichiBet * 1000 }})
           </div>
 
           <details class="result-breakdown">
@@ -343,6 +519,53 @@ watch(totalTiles, () => {
   gap: var(--space-md);
 }
 
+/* 手牌汇总横向展示 */
+.hand-summary {
+  padding: var(--space-md);
+}
+
+.hand-summary-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+}
+
+.tile-group {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.group-separator {
+  width: 1px;
+  height: 40px;
+  background-color: rgba(212, 168, 75, 0.4);
+  margin: 0 var(--space-sm);
+}
+
+.sub-group {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.sub-group + .sub-group {
+  margin-left: var(--space-sm);
+}
+
+.ankan-group .sub-group,
+.fulu-group .sub-group {
+  background-color: rgba(75, 75, 75, 0.2);
+  padding: 2px 4px;
+  border-radius: var(--radius-sm);
+}
+
+.tile-back {
+  width: 28px;
+  height: auto;
+}
+
 .hand-section h3,
 .options-section h3 {
   font-size: 1rem;
@@ -367,6 +590,21 @@ watch(totalTiles, () => {
 .option-item input[type="checkbox"] {
   width: 18px;
   height: 18px;
+}
+
+.option-disabled {
+  opacity: 0.6;
+}
+
+.option-hint {
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+}
+
+.option-divider {
+  height: 1px;
+  background-color: rgba(255, 255, 255, 0.1);
+  margin: var(--space-sm) 0;
 }
 
 .calculate-btn {
@@ -511,6 +749,64 @@ watch(totalTiles, () => {
 .btn-sm {
   padding: 0.25rem 0.75rem;
   font-size: 0.85rem;
+}
+
+.ankan-display {
+  padding: var(--space-md);
+}
+
+.ankan-display h3 {
+  font-size: 1rem;
+  margin-bottom: var(--space-sm);
+}
+
+.ankan-groups {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.ankan-group {
+  background-color: rgba(75, 168, 75, 0.1);
+  border: 1px solid rgba(75, 168, 75, 0.3);
+  border-radius: var(--radius-md);
+  padding: var(--space-sm);
+}
+
+.ankan-group-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-xs);
+  font-size: 0.85rem;
+  color: #4ba84b;
+}
+
+.btn-remove-ankan {
+  background: none;
+  border: none;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  font-size: 1rem;
+  padding: 0 0.25rem;
+}
+
+.btn-remove-ankan:hover {
+  color: var(--color-danger);
+}
+
+.ankan-tiles {
+  display: flex;
+  gap: 2px;
+}
+
+.ankan-tile-wrapper {
+  position: relative;
+}
+
+.tile-back {
+  width: 32px;
+  height: auto;
 }
 
 .yaku-card,

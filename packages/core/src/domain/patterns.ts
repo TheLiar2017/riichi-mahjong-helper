@@ -113,7 +113,8 @@ function findMeldsRecursive(counts: Map<string, number>, current: Meld[]): Meld[
     }
   }
 
-  return results.length > 0 ? results : [current]; // 无法继续时返回
+  // 只有正好4个面子时才返回有效结果，否则返回空
+  return results.length > 0 ? results : [];
 }
 
 // 提取手牌特征

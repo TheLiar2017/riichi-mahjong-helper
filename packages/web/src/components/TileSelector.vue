@@ -6,6 +6,7 @@ import Tile from './Tile.vue'
 const props = defineProps<{
   selectedTiles: string[]
   maxTiles?: number
+  showAkaDora?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -14,9 +15,10 @@ const emit = defineEmits<{
 }>()
 
 const groupedTiles = computed(() => {
-  const man = TILES.filter(t => t.type === 'man')
-  const pin = TILES.filter(t => t.type === 'pin')
-  const sou = TILES.filter(t => t.type === 'sou')
+  const akaDoraIds = props.showAkaDora !== false ? [] : ['r5m', 'r5p', 'r5s']
+  const man = TILES.filter(t => t.type === 'man' && !akaDoraIds.includes(t.id))
+  const pin = TILES.filter(t => t.type === 'pin' && !akaDoraIds.includes(t.id))
+  const sou = TILES.filter(t => t.type === 'sou' && !akaDoraIds.includes(t.id))
   const honor = TILES.filter(t => t.type === 'honor')
   return { man, pin, sou, honor }
 })
