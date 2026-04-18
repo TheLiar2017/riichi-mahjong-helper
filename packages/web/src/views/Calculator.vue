@@ -105,6 +105,13 @@ const removeFuluGroup = (index: number) => {
   result.value = null
 }
 
+const handleRemoveFromSelection = (tileId: string) => {
+  const index = currentSelection.value.indexOf(tileId)
+  if (index > -1) {
+    currentSelection.value.splice(index, 1)
+  }
+}
+
 const clearSelection = () => {
   currentSelection.value = []
 }
@@ -156,6 +163,7 @@ watch(totalTiles, () => {
             :current-selection="currentSelection"
             @confirm-fulu="confirmFulu"
             @remove-group="removeFuluGroup"
+            @remove-from-selection="handleRemoveFromSelection"
             @add-to-hand="addSelectionToHand"
             @clear-selection="clearSelection"
           />

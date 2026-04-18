@@ -34,9 +34,13 @@ const getSelectedCount = (tileId: string) => {
 
 const handleTileClick = (tileId: string) => {
   const count = getSelectedCount(tileId)
+  if (count >= 4) {
+    // 已选4张，不能再选
+    return
+  }
   if (count > 0) {
-    // 已有选择的牌，点击移除一张
-    emit('deselect', tileId)
+    // 已选了1-3张，再点击添加一张（凑刻子/杠）
+    emit('select', tileId)
   } else {
     // 未选择的牌，添加
     emit('select', tileId)

@@ -15,6 +15,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   confirmFulu: [type: 'pon' | 'chi' | 'kan']
   removeGroup: [index: number]
+  removeFromSelection: [tileId: string]
   addToHand: []
   clearSelection: []
 }>()
@@ -95,8 +96,10 @@ const fuluTypeLabels = {
           v-for="(tileId, index) in currentSelection"
           :key="`${tileId}-${index}`"
           class="selection-tile"
+          @click="emit('removeFromSelection', tileId)"
         >
           <Tile :tile-id="tileId" size="sm" />
+          <span class="remove-x">×</span>
         </div>
       </div>
 
@@ -215,6 +218,7 @@ const fuluTypeLabels = {
 }
 
 .selection-tile {
+  position: relative;
   cursor: pointer;
   opacity: 0.8;
 }
@@ -222,6 +226,28 @@ const fuluTypeLabels = {
 .selection-tile:hover {
   opacity: 1;
   transform: scale(1.05);
+}
+
+.selection-tile:hover .remove-x {
+  opacity: 1;
+}
+
+.remove-x {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  background-color: var(--color-danger);
+  color: white;
+  font-size: 0.6rem;
+  font-weight: 700;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.2s;
 }
 
 .fulu-buttons {
