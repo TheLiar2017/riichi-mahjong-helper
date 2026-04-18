@@ -1,0 +1,152 @@
+import type { Tile, TileType } from '../data/tiles';
+import { TILES } from '../data/tiles';
+
+export type MeldType = 'pon' | 'chi' | 'kan';
+
+export interface Meld {
+  type: MeldType;
+  tiles: Tile[];
+}
+
+export interface HandSplit {
+  melds: Meld[];      // 4个面子
+  pair: Tile | null;  // 雀头
+  remaining: Tile[];  // 剩余牌（应为0或进张）
+}
+
+// 统计各牌数量
+export function countTiles(tiles: Tile[]): Map<string, number> {
+  const counts = new Map<string, number>();
+  for (const tile of tiles) {
+    counts.set(tile.id, (counts.get(tile.id) || 0) + 1);
+  }
+  return counts;
+}
+
+// 枚举所有可能的拆解（4面子+1雀头）
+export function splitHand(tiles: Tile[]): HandSplit[] {
+  const results: HandSplit[] = [];
+  const counts = countTiles(tiles);
+
+  // 找雀头
+  const pairTiles: string[] = [];
+  for (const [id, count] of counts) {
+    if (count >= 2) pairTiles.push(id);
+  }
+
+  for (const pairId of pairTiles) {
+    const remaining = new Map(counts);
+    remaining.set(pairId, remaining.get(pairId)! - 2);
+    if (remaining.get(pairId) === 0) remaining.delete(pairId);
+
+    // 枚举面子
+    const melds = findMeldsRecursive(remaining, []);
+    for (const m of melds) {
+      if (m.length === 4) {
+        results.push({
+          melds: m,
+          pair: TILES.find(t => t.id === pairId)!,
+          remaining: []
+        });
+      }
+    }
+  }
+
+  return results;
+}
+
+function findMeldsRecursive(counts: Map<string, number>, current: Meld[]): Meld[][] {
+  // 终止条件：已有4个面子
+  if (current.length === 4) return [current];
+
+  const results: Meld[][] = [];
+
+  // 优先找杠（4张）- 字牌和数牌都可以做杠
+  for (const [id, count] of counts) {
+    if (count >= 4) {
+      const tile = TILES.find(t => t.id === id)!;
+      const newCounts = new Map(counts);
+      newCounts.set(id, count - 4);
+      if (newCounts.get(id) === 0) newCounts.delete(id);
+      const result = findMeldsRecursive(newCounts, [...current, { type: 'kan', tiles: [tile, tile, tile, tile] }]);
+      results.push(...result);
+    }
+  }
+
+  // 找刻子（3张）- 字牌和数牌都可以做刻子
+  for (const [id, count] of counts) {
+    if (count >= 3) {
+      const tile = TILES.find(t => t.id === id)!;
+      const newCounts = new Map(counts);
+      newCounts.set(id, count - 3);
+      if (newCounts.get(id) === 0) newCounts.delete(id);
+      const result = findMeldsRecursive(newCounts, [...current, { type: 'pon', tiles: [tile, tile, tile] }]);
+      results.push(...result);
+    }
+  }
+
+  // 找顺子（3张连续数牌）
+  const manTiles = TILES.filter(t => t.type === 'man');
+  const pinTiles = TILES.filter(t => t.type === 'pin');
+  const souTiles = TILES.filter(t => t.type === 'sou');
+
+  for (const tileGroup of [manTiles, pinTiles, souTiles]) {
+    for (let i = 0; i < tileGroup.length - 2; i++) {
+      const t1 = tileGroup[i];
+      const t2 = tileGroup[i + 1];
+      const t3 = tileGroup[i + 2];
+      const c1 = counts.get(t1.id) || 0;
+      const c2 = counts.get(t2.id) || 0;
+      const c3 = counts.get(t3.id) || 0;
+
+      if (c1 > 0 && c2 > 0 && c3 > 0) {
+        const newCounts = new Map(counts);
+        newCounts.set(t1.id, c1 - 1);
+        newCounts.set(t2.id, c2 - 1);
+        newCounts.set(t3.id, c3 - 1);
+        if (newCounts.get(t1.id) === 0) newCounts.delete(t1.id);
+        if (newCounts.get(t2.id) === 0) newCounts.delete(t2.id);
+        if (newCounts.get(t3.id) === 0) newCounts.delete(t3.id);
+        const result = findMeldsRecursive(newCounts, [...current, { type: 'chi', tiles: [t1, t2, t3] }]);
+        results.push(...result);
+      }
+    }
+  }
+
+  return results.length > 0 ? results : [current]; // 无法继续时返回
+}
+
+// 提取手牌特征
+export interface HandFeatures {
+  isMenzen: boolean;           // 门前清
+  hasYao: boolean;             // 含幺九牌
+  singleSuit: TileType | null; // 同花色（混一色/清一色）
+  allSequences: boolean;       // 全顺子（仅当完整听牌时有效）
+  pairYakuhai: boolean;        // 役牌雀头
+  waitShape: 'ryantan' | 'penchan' | 'kanchan' | 'tanki' | null; // 听牌形状
+}
+
+export function extractFeatures(tiles: Tile[], melds: Meld[], pair: Tile, isTsumo: boolean): HandFeatures {
+  const allTiles = [...tiles];
+  const hasYao = allTiles.some(t =>
+    t.type === 'honor' || t.value === 1 || t.value === 9
+  );
+
+  // 检查单花色
+  const suitTypes = new Set(allTiles.map(t => t.type));
+  let singleSuit: TileType | null = null;
+  if (suitTypes.size === 1 && !suitTypes.has('honor')) {
+    singleSuit = allTiles[0].type;
+  } else if (suitTypes.size === 2 && suitTypes.has('honor')) {
+    const nonHonor = allTiles.find(t => t.type !== 'honor');
+    if (nonHonor) singleSuit = nonHonor.type;
+  }
+
+  // 检查全顺子 - 仅当完整手牌（4个面子）时才有效
+  const allSequences = melds.length === 4 && melds.every(m => m.type === 'chi');
+
+  // 检查役牌雀头
+  const pairYakuhai = pair.type === 'honor';
+
+  return { isMenzen: true, hasYao, singleSuit, allSequences, pairYakuhai, waitShape: null };
+}
