@@ -98,15 +98,32 @@ export function calculateFu(tiles: Tile[], isTsumo: boolean, wind?: string): FuR
   const pairTile = TILES.find(t => t.id === pair);
   const isYakuhaiPair = pairTile?.type === 'honor' && (pair === wind || ['EW', 'FW', 'CW'].includes(pair));
 
-  // Base fu
-  fu = 20;
-  breakdown.push('基本符: 20');
-
-  // Count melds
+  // Find melds
   const melds = findMelds(tiles, counts);
   const ponCount = melds.filter(m => m.type === 'pon').length;
   const kanCount = melds.filter(m => m.type === 'kan').length;
   const chiCount = melds.filter(m => m.type === 'chi').length;
+
+  // Detect ryanpeikou: two identical chi sequences
+  let isRyanpeikou = false;
+  if (chiCount >= 2) {
+    const chiMelds = melds.filter(m => m.type === 'chi');
+    const chiSignatures = chiMelds.map(m => `${m.tiles[0].type}:${m.tiles[0].value}`);
+    const signatureCounts = new Map<string, number>();
+    for (const sig of chiSignatures) {
+      signatureCounts.set(sig, (signatureCounts.get(sig) || 0) + 1);
+    }
+    for (const count of signatureCounts.values()) {
+      if (count >= 2) {
+        isRyanpeikou = true;
+        break;
+      }
+    }
+  }
+
+  // Base fu
+  fu = 20;
+  breakdown.push('基本符: 20');
 
   // Calculate fu from melds
   for (const meld of melds) {
@@ -148,6 +165,71 @@ export function calculateFu(tiles: Tile[], isTsumo: boolean, wind?: string): FuR
     }
   }
 
+  // Wait shape fu (penchan/kanchan/tanki)
+  if (tiles.length === 14) {
+    const chiMelds = melds.filter(m => m.type === 'chi');
+
+    // Calculate remaining tiles not in melds (excluding pair)
+    const remaining = new Map<string, number>();
+    for (const [id, count] of counts) {
+      remaining.set(id, count);
+    }
+    // Subtract tiles used in melds
+    for (const meld of melds) {
+      for (const tile of meld.tiles) {
+        remaining.set(tile.id, (remaining.get(tile.id) || 0) - 1);
+      }
+    }
+    // Remove pair from remaining
+    remaining.set(pair, (remaining.get(pair) || 0) - 2);
+    // Clean up zeros
+    for (const [id, c] of remaining) {
+      if (c <= 0) remaining.delete(id);
+    }
+
+    if (chiMelds.length >= 1) {
+      // Check for penchan (边张): 123 waiting for 3, or 789 waiting for 7
+      for (const chi of chiMelds) {
+        const start = chi.tiles[0].value;
+        if (start === 1) {
+          // 123 pattern - waiting for 3 (penchan)
+          fu += 2;
+          breakdown.push('边张听牌: +2');
+          break;
+        } else if (start === 8) {
+          // 789 pattern - waiting for 7 (penchan)
+          fu += 2;
+          breakdown.push('边张听牌: +2');
+          break;
+        }
+      }
+    }
+
+    // Kanchan (嵌张): middle tile wait - 234 waiting for 3, 345 waiting for 4, etc.
+    let hasKanchan = false;
+    for (const chi of chiMelds) {
+      const start = chi.tiles[0].value;
+      const type = chi.tiles[0].type;
+      if (type !== 'honor' && typeof start === 'number' && start >= 2 && start <= 7) {
+        hasKanchan = true;
+        break;
+      }
+    }
+    if (hasKanchan) {
+      fu += 2;
+      breakdown.push('嵌张听牌: +2');
+    }
+
+    // Tanki (单骑): single tile waiting for pair
+    if (chiMelds.length === 0) {
+      const singleTiles = Array.from(remaining.entries()).filter(([, c]) => c === 1);
+      if (singleTiles.length === 1) {
+        fu += 2;
+        breakdown.push('单骑听牌: +2');
+      }
+    }
+  }
+
   // Round up to nearest 10
   const roundedFu = Math.ceil(fu / 10) * 10;
   if (roundedFu !== fu) {
@@ -161,7 +243,7 @@ export function calculateFu(tiles: Tile[], isTsumo: boolean, wind?: string): FuR
     isTsumo,
     isPinfu,
     isYakuhai: isYakuhaiPair,
-    isRyanpeikou: false
+    isRyanpeikou
   };
 }
 
