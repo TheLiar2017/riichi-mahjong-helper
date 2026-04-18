@@ -60,21 +60,7 @@ const calculate = () => {
 
   const tiles = selectedTiles.value.map(id => getTile(id)).filter(Boolean) as any[]
   const fuResult = calculateFu(tiles, isTsumo.value)
-
-  let han = 0
-
-  // Check tanyao (断幺九) - no 1/9/honor
-  const hasYao = selectedTiles.value.some(id => {
-    const num = parseInt(id)
-    return num === 1 || num === 9 || id.endsWith('S') || id.endsWith('W')
-  })
-  if (!hasYao) han += 1
-
-  // Check pinfu (平和) - all sequences, pair not yakuhai, two-sided wait
-  if (fuResult.isPinfu) han += 1
-
-  // Check tsumo (自摸)
-  if (isTsumo.value && fuResult.isMenzen) han += 1
+  const han = detectedYaku.value.reduce((sum, match) => sum + match.yaku.han, 0)
 
   result.value = calculateScore(fuResult, han, false, riichiBets.value)
 }
