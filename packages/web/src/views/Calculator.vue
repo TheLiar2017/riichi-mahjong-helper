@@ -179,12 +179,12 @@ watch(selectedTiles, () => {
             含 {{ result.riichiBet }} 根立直棒 (+{{ result.riichiBet * 1000 }})
           </div>
 
-          <div class="result-breakdown">
-            <h4>详细分解</h4>
+          <details class="result-breakdown">
+            <summary>查看详细分解 ({{ result.breakdown.length }} 项)</summary>
             <ul>
               <li v-for="(item, index) in result.breakdown" :key="index">{{ item }}</li>
             </ul>
-          </div>
+          </details>
         </div>
 
         <div v-if="sortedYaku.length > 0" class="yaku-card card">
@@ -365,14 +365,36 @@ watch(selectedTiles, () => {
   margin-bottom: var(--space-md);
 }
 
-.result-breakdown h4 {
-  font-size: 0.95rem;
-  margin-bottom: var(--space-sm);
+.result-breakdown {
+  margin-top: var(--space-md);
+}
+
+.result-breakdown summary {
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: var(--color-text-secondary);
+  user-select: none;
+  list-style: none;
+}
+
+.result-breakdown summary::-webkit-details-marker {
+  display: none;
+}
+
+.result-breakdown summary::before {
+  content: '▶ ';
+  font-size: 0.7rem;
+  transition: transform 0.2s;
+  display: inline-block;
+}
+
+.result-breakdown[open] summary::before {
+  content: '▼ ';
 }
 
 .result-breakdown ul {
   list-style: none;
-  padding: 0;
+  padding: var(--space-sm) 0 0 0;
   margin: 0;
 }
 
