@@ -1,5 +1,7 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import Tile from './Tile.vue'
+import { TILES } from '@core/data/tiles'
 
 defineProps<{
   tiles: string[]
@@ -10,6 +12,21 @@ const emit = defineEmits<{
   remove: [index: number]
   clear: []
 }>()
+
+const groupedTiles = computed(() => {
+  const man = TILES.filter(t => t.type === 'man').map(t => t.id)
+  const pin = TILES.filter(t => t.type === 'pin').map(t => t.id)
+  const sou = TILES.filter(t => t.type === 'sou').map(t => t.id)
+  const honor = TILES.filter(t => t.type === 'honor').map(t => t.id)
+  return { man, pin, sou, honor }
+})
+
+const groupNames: Record<string, string> = {
+  man: '万子',
+  pin: '筒子',
+  sou: '索子',
+  honor: '字牌'
+}
 </script>
 
 <template>
@@ -25,15 +42,22 @@ const emit = defineEmits<{
       <div v-if="tiles.length === 0" class="hand-empty">
         点击上方麻将牌开始选牌
       </div>
-      <div
-        v-for="(tileId, index) in tiles"
-        :key="`${tileId}-${index}`"
-        class="hand-tile-wrapper"
-        @click="emit('remove', index)"
-      >
-        <Tile :tile-id="tileId" size="md" />
-        <span class="remove-hint">×</span>
-      </div>
+      <template v-for="(ids, suit) in groupedTiles" :key="suit">
+        <div v-if="ids.some(id => tiles.includes(id))" class="hand-group">
+          <span class="hand-group-label">{{ groupNames[suit] }}</span>
+          <div class="hand-group-tiles">
+            <div
+              v-for="tileId in ids.filter(id => tiles.includes(id))"
+              :key="tileId"
+              class="hand-tile-wrapper"
+              @click="emit('remove', tiles.indexOf(tileId))"
+            >
+              <Tile :tile-id="tileId" size="md" />
+              <span class="remove-hint">×</span>
+            </div>
+          </div>
+        </div>
+      </template>
     </div>
   </div>
 </template>
@@ -75,6 +99,23 @@ const emit = defineEmits<{
   display: flex;
   align-items: center;
   height: 60px;
+}
+
+.hand-group {
+  margin-bottom: var(--space-sm);
+}
+
+.hand-group-label {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-xs);
+}
+
+.hand-group-tiles {
+  display: flex;
+  gap: var(--space-xs);
+  flex-wrap: wrap;
 }
 
 .hand-tile-wrapper {
