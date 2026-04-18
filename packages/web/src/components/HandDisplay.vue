@@ -31,6 +31,10 @@ const groupNames: Record<string, string> = {
 const progress = computed(() => {
   return (props.tiles.length / (props.maxTiles || 14)) * 100
 })
+
+const findIndex = (tileId: string) => {
+  return props.tiles.findIndex(t => t === tileId)
+}
 </script>
 
 <template>
@@ -58,7 +62,7 @@ const progress = computed(() => {
               v-for="tileId in ids.filter(id => tiles.includes(id))"
               :key="tileId"
               class="hand-tile-wrapper"
-              @click="emit('remove', tiles.indexOf(tileId))"
+              @click="emit('remove', findIndex(tileId))"
             >
               <Tile :tile-id="tileId" size="md" />
               <span class="remove-hint">×</span>
