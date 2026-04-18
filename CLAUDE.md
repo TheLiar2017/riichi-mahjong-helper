@@ -9,9 +9,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## 开发命令
 
 ```bash
-npm run dev      # 启动 web 开发服务器 (packages/web)
-npm run build    # 构建 web 应用
+npm run dev      # 启动 web 开发服务器
+npm run build    # 构建生产版本
 npm run preview  # 预览构建结果
+```
+
+**Monorepo 工作区命令**:
+```bash
+npm run dev -w @riichi-mahjong/web    # 指定工作区开发
+npm run build -w @riichi-mahjong/core # 构建核心包
 ```
 
 ## 架构
@@ -43,11 +49,19 @@ packages/
 
 ## 数据结构
 
-- `data/tiles.ts`: 34 种牌定义（万/筒/索/字）
-- `data/yaku.ts`: 40+ 役种数据（含手牌示例、特殊规则）
-- `data/rules.ts`: 规则配置数据
+- `data/tiles.ts`: 34 种牌定义（万/筒/索/字牌）
+- `data/yaku.ts`: 役种数据（含手牌示例14张、特殊规则、门前清/副露限制）
+- `data/rules.ts`: 基础规则配置（场风、振听、宝牌等）
 - `domain/fu.ts`: 符数计算逻辑
 - `domain/score.ts`: 点数计算逻辑
+- `domain/detector.ts`: 役种自动检测逻辑
+
+**手牌数据格式**: 14张牌数组，如 `['1m','2m','3m','1p','1p','1p','ES','ES','ES','5m','6m','7m','9m','9m']`
+
+**役种数据注意**:
+- 役牌（东风/南风/西风/北风/白板/绿发/红中）组成刻子（3张），不是雀头
+- 门前清限定役：立直、一发自摸、门前自摸、平和、一杯口、双立直、七对子、两杯口、四暗刻、九莲宝灯、纯正九莲宝灯
+- 副露减一番役：混全带幺、一气通贯、三色同顺、混一色、纯全带幺、清一色
 
 ## 状态管理
 

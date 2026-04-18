@@ -25,9 +25,9 @@ export const YAKU_LIST: Yaku[] = [
     han: 1,
     description: '门前状态下听牌时宣言立直，支付1000点供托',
     examples: [
-      { tiles: ['1m','1m','1m','2m','3m','4m','5m','5m','5m','6m','7m','8m','9m','EW','EW'], explanation: '门前清听牌型' }
+      { tiles: ['1m','1m','1m','2m','2m','2m','3m','3m','3m','4m','5m','6m','7m','8m'], explanation: '门前清听牌型，等待8m和牌' }
     ],
-    special_rules: '立直后不可更改手牌，只能自摸和牌',
+    special_rules: '门前清限定，立直后不可更改手牌，只能自摸和牌或荣和',
     related_yaku: ['double_riichi', 'ippatsu'],
     common_pitfalls: '食牌后无法立直'
   },
@@ -38,7 +38,7 @@ export const YAKU_LIST: Yaku[] = [
     han: 1,
     description: '立直后在一巡之内自摸和牌',
     examples: [
-      { tiles: ['1m','1m','1m','2m','3m','4m','5m','5m','5m','6m','7m','8m','9m','EW','EW'], explanation: '立直后一巡内自摸' }
+      { tiles: ['1m','1m','1m','2m','2m','2m','3m','3m','3m','4m','5m','6m','7m','8m'], explanation: '立直后一巡内自摸8m和牌' }
     ],
     special_rules: '立直宣言后，除非有人荣和或吃碰杠，否则一巡内自摸可触发',
     related_yaku: ['riichi'],
@@ -51,7 +51,7 @@ export const YAKU_LIST: Yaku[] = [
     han: 1,
     description: '门前清状态下自摸和牌',
     examples: [
-      { tiles: ['2m','3m','4m','2p','3p','4p','5p','6p','7p','3s','4s','5s','6s','7s','2s'], explanation: '门前清自摸和牌' }
+      { tiles: ['2m','3m','4m','2p','3p','4p','5p','6p','7p','3s','4s','5s','6s','6s'], explanation: '门前清自摸6s和牌' }
     ],
     special_rules: '必须门前清状态',
     related_yaku: ['tsumo'],
@@ -64,9 +64,9 @@ export const YAKU_LIST: Yaku[] = [
     han: 1,
     description: '4个顺子+雀头，雀头不是役牌，听牌型为两面听',
     examples: [
-      { tiles: ['1m','2m','3m','4m','5m','6m','7m','8m','9m','2p','3p','4p','8p','9p','2p'], explanation: '两边听牌型' }
+      { tiles: ['1m','2m','3m','4m','5m','6m','7m','8m','9m','2p','3p','5p','5p','1p'], explanation: '两面听牌型，雀头5p，摸1p或4p和牌' }
     ],
-    special_rules: '雀头不能是役牌，听牌必须是两面',
+    special_rules: '门前清限定，雀头不能是役牌，听牌必须是两面',
     related_yaku: ['tanyao'],
     common_pitfalls: '边张和嵌张不算平和'
   },
@@ -77,20 +77,46 @@ export const YAKU_LIST: Yaku[] = [
     han: 1,
     description: '不包含幺九牌（1/9/字牌）的手牌',
     examples: [
-      { tiles: ['2m','3m','4m','2p','3p','4p','5p','6p','7p','3s','4s','5s','6s','7s','3s'], explanation: '全为中张牌' }
+      { tiles: ['2m','3m','4m','2p','3p','4p','5p','6p','7p','3s','3s','3s','6s','6s'], explanation: '全为中张牌，自摸2s和牌' }
     ],
     special_rules: '允许吃碰杠',
     related_yaku: ['pinfu', 'toitoi'],
     common_pitfalls: '含有1或9或字牌即不算'
   },
   {
+    id: 'ippeiko',
+    name_ja: '一盃口',
+    name_zh: '一杯口',
+    han: 1,
+    description: '同一花色且数字相同的两组顺子',
+    examples: [
+      { tiles: ['1m','2m','3m','1m','2m','3m','4m','5m','6m','7m','8m','9m','1p','1p'], explanation: '两组123m顺子+普通顺子+雀头' }
+    ],
+    special_rules: '门前清限定，必须是完全相同的两组顺子',
+    related_yaku: ['ryanpeiko', 'pinfu'],
+    common_pitfalls: '两组数字相近但不同的顺子不算'
+  },
+  {
+    id: 'chankan',
+    name_ja: '搶槓',
+    name_zh: '抢杠',
+    han: 1,
+    description: '别家加杠时荣和抢杠',
+    examples: [
+      { tiles: ['1m','2m','3m','4m','5m','6m','7m','8m','9m','1p','2p','3p','1s','1s'], explanation: '别家碰1s后加杠，可抢杠荣和' }
+    ],
+    special_rules: '只能抢加杠，不能抢暗杠',
+    related_yaku: ['kan', 'rinkou'],
+    common_pitfalls: '只能抢别人碰过的牌加杠'
+  },
+  {
     id: 'east',
     name_ja: '東風',
     name_zh: '东风',
     han: 1,
-    description: '自风或场风为东时，雀头为东风',
+    description: '自风或场风为东时，东风组成刻子',
     examples: [
-      { tiles: ['ES','ES','1m','2m','3m','4m','5m','6m','7m','8m','9m','1p','2p','3p','4p'], explanation: '东为雀头' }
+      { tiles: ['1m','2m','3m','4m','5m','6m','7p','8p','9p','ES','ES','ES','1p','1p'], explanation: '东家自风为东，东组成刻子' }
     ],
     special_rules: '需与自风或场风对应',
     related_yaku: ['south', 'west', 'north'],
@@ -101,9 +127,9 @@ export const YAKU_LIST: Yaku[] = [
     name_ja: '南風',
     name_zh: '南风',
     han: 1,
-    description: '自风或场风为南时，雀头为南风',
+    description: '自风或场风为南时，南风组成刻子',
     examples: [
-      { tiles: ['SS','SS','1m','2m','3m','4m','5m','6m','7m','8m','9m','1p','2p','3p','4p'], explanation: '南为雀头' }
+      { tiles: ['1m','2m','3m','4m','5m','6m','7m','8m','9m','1p','1p','SS','SS','SS'], explanation: '南家自风为南，南组成刻子' }
     ],
     special_rules: '需与自风或场风对应',
     related_yaku: ['east', 'west', 'north'],
@@ -114,9 +140,9 @@ export const YAKU_LIST: Yaku[] = [
     name_ja: '西風',
     name_zh: '西风',
     han: 1,
-    description: '自风或场风为西时，雀头为西风',
+    description: '自风或场风为西时，西风组成刻子',
     examples: [
-      { tiles: ['WS','WS','1m','2m','3m','4m','5m','6m','7m','8m','9m','1p','2p','3p','4p'], explanation: '西为雀头' }
+      { tiles: ['1m','2m','3m','4m','5m','6m','7m','8m','9m','1p','1p','WS','WS','WS'], explanation: '西家自风为西，西组成刻子' }
     ],
     special_rules: '需与自风或场风对应',
     related_yaku: ['east', 'south', 'north'],
@@ -127,9 +153,9 @@ export const YAKU_LIST: Yaku[] = [
     name_ja: '北風',
     name_zh: '北风',
     han: 1,
-    description: '自风或场风为北时，雀头为北风',
+    description: '自风或场风为北时，北风组成刻子',
     examples: [
-      { tiles: ['NS','NS','1m','2m','3m','4m','5m','6m','7m','8m','9m','1p','2p','3p','4p'], explanation: '北为雀头' }
+      { tiles: ['1m','2m','3m','4m','5m','6m','7m','8m','9m','1p','1p','NS','NS','NS'], explanation: '北家自风为北，北组成刻子' }
     ],
     special_rules: '需与自风或场风对应',
     related_yaku: ['east', 'south', 'west'],
@@ -142,11 +168,11 @@ export const YAKU_LIST: Yaku[] = [
     han: 1,
     description: '面子包含白板',
     examples: [
-      { tiles: ['EW','EW','1m','2m','3m','4m','5m','6m','7m','8m','9m','1p','2p','3p','4p'], explanation: '白板为面子' }
+      { tiles: ['1m','2m','3m','4m','5m','6m','7m','8m','9m','1p','1p','EW','EW','EW'], explanation: '白板组成刻子' }
     ],
-    special_rules: '白板通常视为普通牌',
+    special_rules: '白板本身即为1番役，独立计算',
     related_yaku: ['green', 'red'],
-    common_pitfalls: '只有在有役时才计算'
+    common_pitfalls: '三张白板才能成立，不计对或雀头'
   },
   {
     id: 'green',
@@ -155,11 +181,11 @@ export const YAKU_LIST: Yaku[] = [
     han: 1,
     description: '面子包含绿发(發)',
     examples: [
-      { tiles: ['FW','FW','2s','2s','2s','3s','3s','3s','4s','4s','4s','6s','6s','6s','8s'], explanation: '绿发系牌全为刻子' }
+      { tiles: ['2s','3s','4s','5s','6s','7s','1m','2m','3m','4m','5m','FW','FW','FW'], explanation: '绿发组成刻子' }
     ],
-    special_rules: '通常绿发限定为2s/3s/4s/6s/8s组合',
+    special_rules: '绿发本身即为1番役，独立计算',
     related_yaku: ['white', 'red'],
-    common_pitfalls: '必须面子中有绿发'
+    common_pitfalls: '三张绿发才能成立，不计对或雀头'
   },
   {
     id: 'red',
@@ -168,11 +194,11 @@ export const YAKU_LIST: Yaku[] = [
     han: 1,
     description: '面子包含红中',
     examples: [
-      { tiles: ['CW','CW','1m','2m','3m','4m','5m','6m','7m','8m','9m','1p','2p','3p','4p'], explanation: '红中为面子' }
+      { tiles: ['1m','2m','3m','4m','5m','6m','7m','8m','9m','1p','1p','CW','CW','CW'], explanation: '红中组成刻子' }
     ],
-    special_rules: '红中通常视为普通役牌',
+    special_rules: '红中本身即为1番役，独立计算',
     related_yaku: ['white', 'green'],
-    common_pitfalls: '只有在有役时才计算'
+    common_pitfalls: '三张红中才能成立，不计对或雀头'
   },
   // 两番（2翻）
   {
@@ -182,9 +208,9 @@ export const YAKU_LIST: Yaku[] = [
     han: 2,
     description: '开天荒地第一巡内立直',
     examples: [
-      { tiles: ['1m','1m','1m','2m','3m','4m','5m','5m','5m','6m','7m','8m','9m','EW','EW'], explanation: '第一巡立直' }
+      { tiles: ['1m','1m','1m','2m','2m','2m','3m','3m','3m','4m','5m','6m','7m','8m'], explanation: '第一巡立直，等待8m和牌' }
     ],
-    special_rules: '必须在第一巡摸牌前宣告立直',
+    special_rules: '门前清限定，必须在第一巡摸牌前宣告立直',
     related_yaku: ['riichi'],
     common_pitfalls: '第一巡后立直只算普通立直'
   },
@@ -195,9 +221,9 @@ export const YAKU_LIST: Yaku[] = [
     han: 2,
     description: '所有面子和雀头都包含幺九牌',
     examples: [
-      { tiles: ['1m','9m','1m','2m','3m','1p','9p','1s','9s','ES','ES','ES','1m','2m','3m'], explanation: '全带幺九' }
+      { tiles: ['1m','2m','3m','7m','8m','9m','1p','2p','3p','1s','2s','3s','ES','ES'], explanation: '全带幺九，含字牌' }
     ],
-    special_rules: '允许吃碰杠',
+    special_rules: '副露减一番，允许吃碰杠',
     related_yaku: ['junchan', 'honchantai'],
     common_pitfalls: '字牌也算幺九牌'
   },
@@ -208,9 +234,9 @@ export const YAKU_LIST: Yaku[] = [
     han: 2,
     description: '同一种数牌123/456/789三顺子',
     examples: [
-      { tiles: ['1m','2m','3m','4m','5m','6m','7m','8m','9m','1p','1p','1p','2p','3p','4p'], explanation: '万子一气通贯' }
+      { tiles: ['1m','2m','3m','4m','5m','6m','7m','8m','9m','5p','6p','7p','5p','5p'], explanation: '万子一气通贯，听5p' }
     ],
-    special_rules: '必须同一花色',
+    special_rules: '副露减一番，必须同一花色',
     related_yaku: ['pinfu', 'sanshoku_dojun'],
     common_pitfalls: '三色不通贯'
   },
@@ -221,22 +247,22 @@ export const YAKU_LIST: Yaku[] = [
     han: 2,
     description: '万/筒/索三种数牌形成相同的顺子',
     examples: [
-      { tiles: ['1m','2m','3m','1p','2p','3p','1s','2s','3s','5m','5m','5m','EW','EW','EW'], explanation: '123三色同顺' }
+      { tiles: ['1m','2m','3m','1p','2p','3p','1s','2s','3s','5m','6m','7m','2m','2m'], explanation: '123三色同顺，听2m' }
     ],
-    special_rules: '允许吃碰杠',
+    special_rules: '副露减一番，允许吃碰杠',
     related_yaku: ['ittsu', 'sanshoku_doko'],
     common_pitfalls: '必须同一数字顺序'
   },
   {
     id: 'toitoi',
-    name_ja: '対对和',
-    name_zh: '碰碰和',
+    name_ja: '对对和',
+    name_zh: '对对和',
     han: 2,
     description: '全部面子都是刻子或杠子',
     examples: [
-      { tiles: ['1m','1m','1m','5p','5p','5p','9s','9s','9s','EW','EW','EW','2m','3m','4m'], explanation: '全刻子型' }
+      { tiles: ['1m','1m','1m','5p','5p','5p','9s','9s','9s','2m','2m','2m','3m','3m'], explanation: '四组刻子+一对，听3m' }
     ],
-    special_rules: '允许明刻/暗刻',
+    special_rules: '必须通过吃碰杠达成，否则为四暗刻',
     related_yaku: ['sananko', 'honitsu'],
     common_pitfalls: '顺子型不算'
   },
@@ -247,24 +273,24 @@ export const YAKU_LIST: Yaku[] = [
     han: 2,
     description: '三个以上的暗刻（含暗杠）',
     examples: [
-      { tiles: ['1m','1m','1m','5p','5p','5p','9s','9s','9s','2m','3m','4m','EW','EW','EW'], explanation: '三个暗刻' }
+      { tiles: ['1m','1m','1m','5p','5p','5p','9s','9s','9s','2m','3m','4m','3m','3m'], explanation: '三个暗刻+顺子+雀头，听3m' }
     ],
     special_rules: '暗杠也算暗刻',
     related_yaku: ['toitoi', 'suanko'],
     common_pitfalls: '必须三个独立暗刻'
   },
   {
-    id: 'sannren',
-    name_ja: '三連刻',
-    name_zh: '三连刻',
+    id: 'sangangzi',
+    name_ja: '三槓子',
+    name_zh: '三杠子',
     han: 2,
-    description: '同一个数牌连续三个刻子',
+    description: '三个杠子（明杠或暗杠）',
     examples: [
-      { tiles: ['1m','1m','1m','2m','2m','2m','3m','3m','3m','5p','5p','5p','EW','EW','EW'], explanation: '123三连刻' }
+      { tiles: ['1m','1m','1m','1m','5p','5p','5p','5p','9s','9s','9s','9s','3m','3m'], explanation: '三个杠子+一对' }
     ],
-    special_rules: '必须是同一数牌的连续刻子',
+    special_rules: '三个杠子独立计算，不与四暗刻兼得',
     related_yaku: ['toitoi', 'sananko'],
-    common_pitfalls: '数字必须连续'
+    common_pitfalls: '四杠子为役满，三杠子为两番'
   },
   {
     id: 'shosangen',
@@ -273,7 +299,7 @@ export const YAKU_LIST: Yaku[] = [
     han: 2,
     description: '三元牌两种为刻子，一种为雀头',
     examples: [
-      { tiles: ['EW','EW','EW','FW','FW','FW','CW','CW','1m','2m','3m','4m','5m','6m','7m'], explanation: '白发了为刻子，中为雀头' }
+      { tiles: ['EW','EW','EW','FW','FW','FW','1m','2m','3m','4m','5m','6m','7m','CW','CW'], explanation: '白发了为刻子，中为雀头' }
     ],
     special_rules: '小三元为两番役满',
     related_yaku: ['daisangen'],
@@ -283,14 +309,53 @@ export const YAKU_LIST: Yaku[] = [
     id: 'honitsu',
     name_ja: '混一色',
     name_zh: '混一色',
-    han: 2,
+    han: 3,
     description: '只有一种数牌加字牌组成',
     examples: [
-      { tiles: ['1m','2m','3m','4m','5m','6m','7m','8m','9m','ES','ES','1m','2m','3m','1m'], explanation: '万子混一色' }
+      { tiles: ['1m','2m','3m','4m','5m','6m','7m','8m','9m','1m','2m','3m','ES','ES'], explanation: '万子混一色，听ES' }
     ],
-    special_rules: '允许吃碰杠',
+    special_rules: '副露减一番，允许吃碰杠',
     related_yaku: ['chinitsu', 'toitoi'],
     common_pitfalls: '不能有两种数牌'
+  },
+  {
+    id: 'sanshoku',
+    name_ja: '三色同刻',
+    name_zh: '三色同刻',
+    han: 2,
+    description: '同一个数牌在一万/一筒/一索三种花色都有刻子',
+    examples: [
+      { tiles: ['7m','7m','7m','7p','7p','7p','7s','7s','7s','3m','4m','5m','6m','6m'], explanation: '三色7同刻面子，听3m和6m' }
+    ],
+    special_rules: '万筒索同数字刻子各一组',
+    related_yaku: ['pinfu', 'toitoi'],
+    common_pitfalls: '必须是同一数字的三种花色刻子'
+  },
+  {
+    id: 'honrou',
+    name_ja: '混老头',
+    name_zh: '混老头',
+    han: 2,
+    description: '全部由幺九牌和字牌组成',
+    examples: [
+      { tiles: ['1m','1m','1m','9m','9m','9m','1p','1p','1p','EW','EW','EW','CW','CW'], explanation: '幺九刻子×3+字牌刻子+字牌雀头' }
+    ],
+    special_rules: '含字牌和1/9牌，允许碰杠',
+    related_yaku: ['chinitsu', 'tanyao'],
+    common_pitfalls: '混一色含数牌，混老头只需幺九和字牌'
+  },
+  {
+    id: 'chiitoitsu',
+    name_ja: '七対子',
+    name_zh: '七对子',
+    han: 2,
+    description: '七个对子组成的手牌',
+    examples: [
+      { tiles: ['1m','1m','2m','2m','3m','3m','4p','4p','5p','5p','6s','6s','ES','ES'], explanation: '七个对子组成' }
+    ],
+    special_rules: '门前清限定，不能吃碰杠',
+    related_yaku: ['pinfu', 'toitoi'],
+    common_pitfalls: '对子不能重复计算'
   },
   // 三番（3翻）
   {
@@ -300,9 +365,9 @@ export const YAKU_LIST: Yaku[] = [
     han: 3,
     description: '所有面子和雀头都包含幺九牌，不含字牌',
     examples: [
-      { tiles: ['1m','9m','1m','2m','3m','1p','9p','1s','9s','1m','1m','1m','2m','3m','4m'], explanation: '纯全带幺' }
+      { tiles: ['1m','2m','3m','7m','8m','9m','1p','2p','3p','1s','2s','3s','9p','9p'], explanation: '纯全带幺，无字牌' }
     ],
-    special_rules: '不可含字牌',
+    special_rules: '副露减一番，不可含字牌',
     related_yaku: ['chanta', 'honchantai'],
     common_pitfalls: '含字牌则降为混全'
   },
@@ -313,7 +378,7 @@ export const YAKU_LIST: Yaku[] = [
     han: 3,
     description: '所有面子和雀头都包含幺九牌，含字牌',
     examples: [
-      { tiles: ['1m','9m','1m','2m','3m','1p','9p','1s','9s','ES','ES','ES','1m','2m','3m'], explanation: '混全带幺' }
+      { tiles: ['1m','2m','3m','7m','8m','9m','1p','2p','3p','1s','2s','3s','ES','ES'], explanation: '混全带幺，有字牌' }
     ],
     special_rules: '必须同时有幺九牌和字牌',
     related_yaku: ['chanta', 'junchan'],
@@ -326,24 +391,11 @@ export const YAKU_LIST: Yaku[] = [
     han: 3,
     description: '同种数牌有两个及以上同顺',
     examples: [
-      { tiles: ['1m','2m','3m','1m','2m','3m','7m','8m','9m','7m','8m','9m','EW','EW','EW'], explanation: '两个一三顺子+两个七八九顺子' }
+      { tiles: ['1m','2m','3m','1m','2m','3m','7m','8m','9m','7m','8m','9m','2p','2p'], explanation: '两组123m顺子+两组789m顺子+雀头' }
     ],
-    special_rules: '必须门前清',
+    special_rules: '门前清限定，必须两组以上同顺',
     related_yaku: ['peikou', 'ippin'],
     common_pitfalls: '吃牌后不算'
-  },
-  {
-    id: 'sanbonsan',
-    name_ja: '三本三',
-    name_zh: '三本三',
-    han: 3,
-    description: '三个相同数牌的刻子',
-    examples: [
-      { tiles: ['1m','1m','1m','5p','5p','5p','9s','9s','9s','2m','3m','4m','EW','EW','EW'], explanation: '三个本三刻子' }
-    ],
-    special_rules: '必须三个不同的刻子',
-    related_yaku: ['toitoi'],
-    common_pitfalls: '必须三个独立刻子'
   },
   // 六番（6翻）
   {
@@ -353,9 +405,9 @@ export const YAKU_LIST: Yaku[] = [
     han: 6,
     description: '全部由一种数牌组成',
     examples: [
-      { tiles: ['1m','2m','3m','4m','5m','6m','7m','8m','9m','1m','2m','3m','4m','5m','6m'], explanation: '万子清一色' }
+      { tiles: ['1m','2m','3m','4m','5m','6m','7m','8m','9m','1m','2m','3m','4m','6m'], explanation: '万子清一色，听6m' }
     ],
-    special_rules: '允许吃碰杠',
+    special_rules: '副露减一番，允许吃碰杠',
     related_yaku: ['honitsu'],
     common_pitfalls: '含字牌或他花色不算'
   },
@@ -368,7 +420,7 @@ export const YAKU_LIST: Yaku[] = [
     han_locked: true,
     description: '亲家配牌后直接和牌',
     examples: [
-      { tiles: ['1m','1m','1m','2m','3m','4m','5m','5m','5m','6m','7m','8m','9m','EW','EW'], explanation: '配牌即和' }
+      { tiles: ['1m','1m','1m','2m','3m','4m','5m','5m','5m','6m','7m','8m','9m','9m'], explanation: '配牌即和' }
     ],
     special_rules: '仅亲家可役满',
     related_yaku: ['chiho'],
@@ -382,7 +434,7 @@ export const YAKU_LIST: Yaku[] = [
     han_locked: true,
     description: '子家第一巡摸牌后直接自摸和牌',
     examples: [
-      { tiles: ['1m','1m','1m','2m','3m','4m','5m','5m','5m','6m','7m','8m','9m','EW','EW'], explanation: '第一巡自摸' }
+      { tiles: ['1m','1m','1m','2m','3m','4m','5m','5m','5m','6m','7m','8m','9m','9m'], explanation: '第一巡自摸' }
     ],
     special_rules: '必须第一巡自摸',
     related_yaku: ['tenho'],
@@ -396,7 +448,7 @@ export const YAKU_LIST: Yaku[] = [
     han_locked: true,
     description: '三种元牌全部为刻子',
     examples: [
-      { tiles: ['EW','EW','EW','FW','FW','FW','CW','CW','CW','1m','2m','3m','4m','5m','6m'], explanation: '白发中全为刻子' }
+      { tiles: ['EW','EW','EW','FW','FW','FW','CW','CW','CW','3m','4m','5m','5m','5m'], explanation: '白发中全为刻子+顺子+雀头' }
     ],
     special_rules: '三种元牌必须都为刻子',
     related_yaku: ['shosangen'],
@@ -410,9 +462,9 @@ export const YAKU_LIST: Yaku[] = [
     han_locked: true,
     description: '四个暗刻单骑听牌',
     examples: [
-      { tiles: ['1m','1m','1m','5p','5p','5p','9s','9s','9s','2m','3m','4m','EW','EW','EW'], explanation: '四个暗刻单骑听' }
+      { tiles: ['1m','1m','1m','5p','5p','5p','9s','9s','9s','2m','2m','3m','3m','3m'], explanation: '四个暗刻+一对，摸到3m与3m对组成刻子' }
     ],
-    special_rules: '必须全部暗刻且单骑听牌',
+    special_rules: '门前清限定，必须全部暗刻且单骑听牌',
     related_yaku: ['toitoi', 'sananko'],
     common_pitfalls: '四暗刻听张降为两番'
   },
@@ -424,11 +476,25 @@ export const YAKU_LIST: Yaku[] = [
     han_locked: true,
     description: '四个暗刻单骑和牌',
     examples: [
-      { tiles: ['1m','1m','1m','5p','5p','5p','9s','9s','9s','2m','3m','4m','EW','EW','CW'], explanation: '单骑自摸和' }
+      { tiles: ['1m','1m','1m','5p','5p','5p','9s','9s','9s','2m','2m','2m','3m','3m'], explanation: '四暗刻单骑和3m' }
     ],
-    special_rules: '必须单骑自摸',
+    special_rules: '门前清限定，必须单骑自摸',
     related_yaku: ['suanko'],
     common_pitfalls: '荣和只算普通四暗刻'
+  },
+  {
+    id: 'guoshi',
+    name_ja: '國士無雙',
+    name_zh: '国士无双',
+    han: 13,
+    han_locked: true,
+    description: '含有全部幺九牌和字牌，十三面听',
+    examples: [
+      { tiles: ['1m','9m','1p','9p','1s','9s','ES','SS','WS','NS','EW','FW','CW','1m'], explanation: '十三种幺九字牌加一张1m，十三面听' }
+    ],
+    special_rules: '门前清限定，十三面听',
+    related_yaku: ['shosushi', 'daisushi'],
+    common_pitfalls: '吃过牌后不算'
   },
   {
     id: 'daisushi',
@@ -438,7 +504,7 @@ export const YAKU_LIST: Yaku[] = [
     han_locked: true,
     description: '四种字牌全部为刻子',
     examples: [
-      { tiles: ['ES','ES','ES','SS','SS','SS','WS','WS','WS','NS','NS','NS','1m','2m','3m'], explanation: '东南西北全为刻子' }
+      { tiles: ['ES','ES','ES','SS','SS','SS','WS','WS','WS','NS','NS','NS','EW','EW'], explanation: '东南西北全为刻子+白板雀头' }
     ],
     special_rules: '四种字牌必须都为刻子',
     related_yaku: ['shosushi'],
@@ -452,7 +518,7 @@ export const YAKU_LIST: Yaku[] = [
     han_locked: true,
     description: '四种字牌三种为刻子一种为雀头',
     examples: [
-      { tiles: ['ES','ES','ES','SS','SS','SS','WS','WS','WS','NS','NS','1m','2m','3m','4m'], explanation: '东南西北中小四喜' }
+      { tiles: ['ES','ES','ES','SS','SS','SS','WS','WS','WS','NS','NS','1m','2m','3m'], explanation: '三种风牌刻子+北风雀头+顺子' }
     ],
     special_rules: '三种刻子一种雀头',
     related_yaku: ['daisushi'],
@@ -466,7 +532,7 @@ export const YAKU_LIST: Yaku[] = [
     han_locked: true,
     description: '全部由字牌组成',
     examples: [
-      { tiles: ['ES','ES','ES','SS','SS','SS','WS','WS','WS','NS','NS','NS','EW','EW','EW'], explanation: '字一色' }
+      { tiles: ['ES','ES','ES','SS','SS','SS','WS','WS','WS','NS','NS','NS','EW','EW'], explanation: '字一色' }
     ],
     special_rules: '全部由字牌组成',
     related_yaku: ['honitsu', 'chinitsu'],
@@ -480,7 +546,7 @@ export const YAKU_LIST: Yaku[] = [
     han_locked: true,
     description: '全部由绿发相关牌组成',
     examples: [
-      { tiles: ['2s','2s','2s','3s','3s','3s','4s','4s','4s','6s','6s','6s','8s','8s','8s'], explanation: '绿一色' }
+      { tiles: ['2s','2s','2s','3s','3s','3s','4s','4s','4s','6s','6s','6s','8s','8s'], explanation: '绿一色' }
     ],
     special_rules: '限定使用绿发系牌',
     related_yaku: ['honitsu', 'chinitsu'],
@@ -494,7 +560,7 @@ export const YAKU_LIST: Yaku[] = [
     han_locked: true,
     description: '全部由老头（1/9）组成',
     examples: [
-      { tiles: ['1m','1m','1m','9m','9m','9m','1s','1s','1s','9s','9s','9s','1p','9p','1p'], explanation: '清老头' }
+      { tiles: ['1m','1m','1m','9m','9m','9m','1s','1s','1s','9s','9s','9s','1p','1p'], explanation: '全部幺九刻子+雀头' }
     ],
     special_rules: '只含1和9',
     related_yaku: ['honitsu', 'chinitsu'],
@@ -508,7 +574,7 @@ export const YAKU_LIST: Yaku[] = [
     han_locked: true,
     description: '同种数牌1112345678999加任意一张该牌',
     examples: [
-      { tiles: ['1m','1m','1m','2m','3m','4m','5m','6m','7m','8m','9m','9m','9m','1m','1m'], explanation: '九莲宝灯' }
+      { tiles: ['1m','1m','1m','2m','3m','4m','5m','6m','7m','8m','9m','9m','9m','1m'], explanation: '1112345678999+任意一张1m' }
     ],
     special_rules: '必须门前清',
     related_yaku: ['junsei_chuuren', 'chinitsu'],
@@ -522,9 +588,9 @@ export const YAKU_LIST: Yaku[] = [
     han_locked: true,
     description: '同种数牌1112345678999加该牌本身和牌',
     examples: [
-      { tiles: ['1m','1m','1m','2m','3m','4m','5m','6m','7m','8m','9m','9m','9m','1m','1m'], explanation: '纯正九莲宝灯' }
+      { tiles: ['1m','1m','1m','2m','3m','4m','5m','6m','7m','8m','9m','9m','9m','1m'], explanation: '1112345678999+1m和牌' }
     ],
-    special_rules: '纯正为役满',
+    special_rules: '门前清限定，纯正为役满',
     related_yaku: ['chuuren_poto', 'chinitsu'],
     common_pitfalls: '必须1112345678999+1'
   },
@@ -536,7 +602,7 @@ export const YAKU_LIST: Yaku[] = [
     han: 1,
     description: '牌山最后一牌自摸和牌',
     examples: [
-      { tiles: ['1m','1m','1m','2m','3m','4m','5m','5m','5m','6m','7m','8m','9m','EW','EW'], explanation: '海底自摸' }
+      { tiles: ['1m','1m','1m','2m','2m','2m','3m','3m','3m','4m','5m','6m','7m','8m'], explanation: '海底自摸8m和牌' }
     ],
     special_rules: '最后一牌自摸',
     related_yaku: ['houtei'],
@@ -549,7 +615,7 @@ export const YAKU_LIST: Yaku[] = [
     han: 1,
     description: '牌山最后一牌荣和',
     examples: [
-      { tiles: ['1m','1m','1m','2m','3m','4m','5m','5m','5m','6m','7m','8m','9m','EW','EW'], explanation: '河底荣和' }
+      { tiles: ['1m','1m','1m','2m','2m','2m','3m','3m','3m','4m','5m','6m','7m','8m'], explanation: '河底荣和8m' }
     ],
     special_rules: '最后一牌荣和',
     related_yaku: ['haitei'],
@@ -562,24 +628,11 @@ export const YAKU_LIST: Yaku[] = [
     han: 1,
     description: '岭上牌自摸和牌',
     examples: [
-      { tiles: ['1m','1m','1m','2m','3m','4m','5m','5m','5m','6m','7m','8m','9m','EW','EW'], explanation: '岭上开花' }
+      { tiles: ['1m','1m','1m','2m','2m','2m','3m','3m','3m','4m','5m','6m','7m','8m'], explanation: '岭上开花自摸8m和牌' }
     ],
     special_rules: '杠后摸岭上牌',
     related_yaku: ['kan'],
     common_pitfalls: '必须杠后'
-  },
-  {
-    id: 'kan',
-    name_ja: '槓',
-    name_zh: '杠',
-    han: 1,
-    description: '明杠或暗杠',
-    examples: [
-      { tiles: ['1m','1m','1m','1m','2m','3m','4m','5m','5m','5m','6m','7m','8m','9m','EW'], explanation: '明杠' }
-    ],
-    special_rules: '任何杠都算',
-    related_yaku: ['rinkou'],
-    common_pitfalls: '岭上开花需配合'
   },
 ];
 

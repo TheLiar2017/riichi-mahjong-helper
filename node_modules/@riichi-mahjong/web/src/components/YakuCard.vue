@@ -1,9 +1,27 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import type { Yaku } from '@core/data/yaku'
+import Tile from './Tile.vue'
 
-defineProps<{
+const props = defineProps<{
   yaku: Yaku
 }>()
+
+const exampleTiles = computed(() => {
+  if (!props.yaku.examples.length) return []
+  return props.yaku.examples[0].tiles
+})
+
+const handTiles = computed(() => {
+  return exampleTiles.value.slice(0, -1)
+})
+
+const winningTile = computed(() => {
+  if (exampleTiles.value.length >= 14) {
+    return exampleTiles.value[exampleTiles.value.length - 1]
+  }
+  return null
+})
 </script>
 
 <template>
@@ -18,9 +36,28 @@ defineProps<{
 
     <p class="yaku-desc">{{ yaku.description }}</p>
 
-    <div v-if="yaku.examples.length > 0" class="yaku-example">
+    <div v-if="exampleTiles.length > 0" class="yaku-example">
       <strong>示例：</strong>
-      <span class="example-tiles">{{ yaku.examples[0].tiles.join(' ') }}</span>
+      <div class="example-hand">
+        <div class="hand-tiles">
+          <Tile
+            v-for="(tileId, idx) in handTiles"
+            :key="`hand-${tileId}-${idx}`"
+            :tile-id="tileId"
+            size="sm"
+            class="example-tile"
+          />
+        </div>
+        <div v-if="winningTile" class="winning-section">
+          <span class="winning-label">摸</span>
+          <Tile
+            :tile-id="winningTile"
+            size="sm"
+            class="example-tile winning-tile"
+          />
+          <span class="winning-label">和</span>
+        </div>
+      </div>
       <p class="example-explanation">{{ yaku.examples[0].explanation }}</p>
     </div>
 
@@ -82,12 +119,42 @@ defineProps<{
   font-size: 0.9rem;
 }
 
-.example-tiles {
-  font-family: monospace;
-  background-color: rgba(0, 0, 0, 0.2);
-  padding: 0.2rem 0.5rem;
-  border-radius: var(--radius-sm);
-  margin-left: var(--space-xs);
+.example-hand {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  margin-top: var(--space-xs);
+  padding: var(--space-sm);
+  background-color: var(--color-bg);
+  border-radius: var(--radius-md);
+}
+
+.hand-tiles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+}
+
+.winning-section {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding-top: var(--space-xs);
+  border-top: 1px dashed rgba(212, 168, 75, 0.3);
+}
+
+.winning-label {
+  font-size: 0.75rem;
+  color: var(--color-accent);
+  font-weight: 600;
+}
+
+.winning-tile {
+  filter: brightness(1.2);
+}
+
+.example-tile {
+  filter: brightness(1.1);
 }
 
 .example-explanation {
