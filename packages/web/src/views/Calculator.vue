@@ -158,11 +158,12 @@ watch(selectedTiles, () => {
             </div>
           </div>
 
-          <div class="result-points">
+          <div class="result-points-row">
             <div class="point-item">
               <span class="point-label">亲家支付</span>
               <span class="point-value">{{ formatScore(result.parentPoints) }}</span>
             </div>
+            <div class="point-divider">/</div>
             <div class="point-item">
               <span class="point-label">子家支付</span>
               <span class="point-value">{{ formatScore(result.childPoints) }}</span>
@@ -316,13 +317,20 @@ watch(selectedTiles, () => {
   color: var(--color-text-secondary);
 }
 
-.result-points {
+.result-points-row {
   display: flex;
-  justify-content: space-around;
+  justify-content: center;
+  align-items: center;
+  gap: var(--space-lg);
   padding: var(--space-md) 0;
   border-top: 1px solid rgba(212, 168, 75, 0.2);
   border-bottom: 1px solid rgba(212, 168, 75, 0.2);
   margin-bottom: var(--space-md);
+}
+
+.point-divider {
+  font-size: 1.5rem;
+  color: var(--color-text-secondary);
 }
 
 .point-item {
