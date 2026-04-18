@@ -126,7 +126,10 @@ export interface HandFeatures {
   waitShape: 'ryantan' | 'penchan' | 'kanchan' | 'tanki' | null; // 听牌形状
 }
 
-export function extractFeatures(tiles: Tile[], melds: Meld[], pair: Tile, _isTsumo: boolean): HandFeatures {
+// 役牌ID列表 - 三元牌（白板、绿发、红中）
+const YAKUHAI_DRAGON_IDS = ['FW', 'CW', 'RD'];
+
+export function extractFeatures(tiles: Tile[], melds: Meld[], pair: Tile, _isTsumo: boolean, selfWind?: string, fieldWind?: string): HandFeatures {
   const allTiles = [...tiles];
   const hasYao = allTiles.some(t =>
     t.type === 'honor' || t.value === 1 || t.value === 9
@@ -145,8 +148,12 @@ export function extractFeatures(tiles: Tile[], melds: Meld[], pair: Tile, _isTsu
   // 检查全顺子 - 仅当完整手牌（4个面子）时才有效
   const allSequences = melds.length === 4 && melds.every(m => m.type === 'chi');
 
-  // 检查役牌雀头
-  const pairYakuhai = pair.type === 'honor';
+  // 检查役牌雀头 - 役牌包括自风、场风、三元牌
+  const pairIsYakuhai = pair.type === 'honor' && (
+    pair.id === selfWind ||
+    pair.id === fieldWind ||
+    YAKUHAI_DRAGON_IDS.includes(pair.id)
+  );
 
-  return { isMenzen: true, hasYao, singleSuit, allSequences, pairYakuhai, waitShape: null };
+  return { isMenzen: true, hasYao, singleSuit, allSequences, pairYakuhai: pairIsYakuhai, waitShape: null };
 }

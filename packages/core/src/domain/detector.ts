@@ -19,7 +19,8 @@ export interface TenpaiResult {
 }
 
 // 检测单一役种是否满足
-function matchYaku(yaku: Yaku, _tiles: Tile[], split: HandSplit, features: HandFeatures, isTsumo: boolean, _isParent: boolean, _wind?: string): boolean {
+// 注意: selfWind 和 fieldWind 参数通过 features.pairYakuhai 间接使用(在 extractFeatures 中计算)
+function matchYaku(yaku: Yaku, _tiles: Tile[], split: HandSplit, features: HandFeatures, isTsumo: boolean, _isParent: boolean, _selfWind?: string, _fieldWind?: string): boolean {
   switch (yaku.id) {
     case 'tanyao':
       return !features.hasYao;
@@ -90,20 +91,20 @@ function buildFullHand(split: HandSplit): Tile[] {
 }
 
 // 完整和牌检测
-export function detectYaku(tiles: Tile[], isTsumo: boolean, isParent: boolean, wind?: string): YakuMatch[] {
+export function detectYaku(tiles: Tile[], isTsumo: boolean, isParent: boolean, selfWind?: string, fieldWind?: string): YakuMatch[] {
   const results: YakuMatch[] = [];
   const splits = splitHand(tiles);
 
   for (const split of splits) {
     if (!split.pair) continue;
-    const features = extractFeatures(tiles, split.melds, split.pair, isTsumo);
+    const features = extractFeatures(tiles, split.melds, split.pair, isTsumo, selfWind, fieldWind);
     const fullHand = buildFullHand(split);
 
     // 使用实际的calculateFu获取真实符数
-    const fuResult = calculateFu(fullHand, isTsumo, wind);
+    const fuResult = calculateFu(fullHand, isTsumo, selfWind);
 
     for (const yaku of YAKU_LIST) {
-      if (matchYaku(yaku, tiles, split, features, isTsumo, isParent, wind)) {
+      if (matchYaku(yaku, tiles, split, features, isTsumo, isParent, selfWind, fieldWind)) {
         const score = calculateScore(fuResult, yaku.han, isParent);
 
         results.push({
@@ -119,7 +120,7 @@ export function detectYaku(tiles: Tile[], isTsumo: boolean, isParent: boolean, w
 }
 
 // 听牌分析
-export function analyzeTenpai(tiles: Tile[], wind?: string): TenpaiResult[] {
+export function analyzeTenpai(tiles: Tile[], selfWind?: string, fieldWind?: string): TenpaiResult[] {
   if (tiles.length !== 13) return [];
 
   const results: TenpaiResult[] = [];
@@ -132,7 +133,7 @@ export function analyzeTenpai(tiles: Tile[], wind?: string): TenpaiResult[] {
     if (count >= 4) continue;
 
     const fullHand = [...tiles, tile];
-    const matches = detectYaku(fullHand, true, false, wind);
+    const matches = detectYaku(fullHand, true, false, selfWind, fieldWind);
 
     if (matches.length > 0) {
       results.push({ waitingTile: tile, possibleYaku: matches });
